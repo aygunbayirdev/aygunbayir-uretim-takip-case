@@ -53,25 +53,25 @@ npm run dev
 
 > OEE trend grafiği, vardiya/istasyon karşılaştırması ve KPI kartları.
 
-![Dashboard](ai_usage/screenshots/dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 
 ### Import Ekranı
 
 > CSV sürükle-bırak, sütun eşleştirme ve import özeti.
 
-![Import](ai_usage/screenshots/import.png)
+![Import](screenshots/import.png)
 
 ### Validasyon Raporu
 
 > Hata tipi filtreleme, severity'e göre iki farklı çözüm akışı ve Excel export.
 
-![Validation](ai_usage/screenshots/validation.png)
+![Validation](screenshots/validation.png)
 
 ### API Gönderim Ekranı
 
 > Gönderim geçmişi, HTTP durum kodu, yanıt detayı ve retry butonu.
 
-![Submissions](ai_usage/screenshots/submissions.png)
+![Submissions](screenshots/submissions.png)
 
 ---
 

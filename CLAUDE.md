@@ -4,6 +4,26 @@
 
 ---
 
+## 0. Geliştirme Döngüsü (Zorunlu)
+
+Her özellik için şu döngü izlenir — istisnasız:
+
+```
+1. PLANLA        → Neyi, nasıl yapacağını açıkla. Kullanıcı onayını bekle.
+2. UYGULA        → Onay geldikten sonra implement et.
+3. REVIEW        → Commit mesajını göster, kullanıcı onayını bekle.
+4. COMMIT        → Onay geldikten sonra commit et.
+5. TASKS.md GÜN. → Tamamlanan maddeleri [x] ile işaretle, yeni maddeler eklendiyse ekle.
+```
+
+**Kurallar:**
+- Planlama yapılmadan hiçbir implementasyona başlanmaz.
+- Commit mesajı kullanıcı onaylamadan commit atılmaz.
+- Her commit sonrası TASKS.md güncellenir — sonraya bırakılmaz.
+- Kullanıcı her aşamada karar verir; Claude öneri sunar, dayatmaz.
+
+---
+
 ## 1. Proje Özeti
 
 Magna otomotiv yan sanayi için injection molding hattı OEE takip uygulaması.

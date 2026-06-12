@@ -12,6 +12,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 - [x] `frontend/package.json` bağımlılıklarını tanımla
 - [x] `frontend/vite.config.ts` ve `tsconfig.json` yapılandır
 - [x] `.gitignore` oluştur (`.env`, `__pycache__`, `node_modules`, `*.db`)
+- [x] `docker-compose.yml` — backend + frontend servisleri
 
 ---
 
@@ -31,72 +32,87 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 - [x] `services/csv_parser.py` — chardet ile encoding auto-detect (Latin-1 / CP1254)
 - [x] `pandas.read_csv(..., chunksize=5000)` ile chunk'lı okuma (100K+ satır desteği)
 - [x] Sütun adı mapping — kullanıcı onaylı UI mapping + otomatik tespit (18/18 sütun)
+- [x] SHA-256 file_hash hesaplama (tek noktada, tekrar hesaplanmaz)
+- [x] Token tabanlı temp store (TTL: 10 dk, lazy cleanup)
 - [x] Ham parse sonucu `dict` listesi olarak dön, validasyona hazırla
 
 ---
 
 ## 4. Validator Servisi (%25 — En Yüksek Ağırlık)
 
-- [ ] `services/validator.py` — temel iskelet, `ValidationIssue` dataclass
-- [ ] **VG-01** — Zorunlu alan eksikliği → ERROR / REJECT (21 kayıt)
-- [ ] **VG-02** — Opsiyonel alan eksikliği → WARNING / WARN (124 kayıt)
-- [ ] **VP-01a** — Performance > 100 + süre < 5 dk (artefakt) → ERROR / REJECT (144 kayıt)
-- [ ] **VP-01b** — Performance > 100 + süre ≥ 5 dk (kalibrasyon) → WARNING / WARN (640 kayıt)
-- [ ] **VQ-01** — Quality aralık dışı (< 0 veya > 100) → ERROR / REJECT (5 kayıt)
-- [ ] **VO-01** — OEE > 100 → WARNING / WARN (543 kayıt)
-- [ ] **VC-01** — Hatalı miktar > Üretilen miktar → ERROR / REJECT (166 kayıt)
-- [ ] **VC-02** — Quality formülü tutarsızlığı (>1% sapma) → WARNING / WARN (16 kayıt)
-- [ ] **VC-03** — Negatif miktar (üretilen veya hatalı) → ERROR / REJECT (5 kayıt)
-- [ ] **VD-01** — Negatif çalışma süresi → ERROR / REJECT (3 kayıt)
-- [ ] **VD-02** — Duruş toplamı tutarsızlığı (±0.5 tolerans) → WARNING / WARN (8 kayıt)
-- [ ] **VD-03** — Sentinel/overflow duruş (250.0 dk) → WARNING / WARN (8 kayıt)
-- [ ] **VL-01** — Availability=0 ama üretim var → ERROR / REJECT (9 kayıt)
-- [ ] **VL-02** — Çalışma süresi=0 ama üretim var → ERROR / REJECT (11 kayıt)
-- [ ] **VL-03** — Availability formülü sapması (>1%) → WARNING / WARN (626 kayıt)
-- [ ] **VV-01** — Vardiya aralık dışı (1/2/3 dışı) → ERROR / REJECT
-- [ ] **VF-01** — İş emri no format kontrolü (`^302\d{7}$`) → WARNING / WARN
-- [ ] **VD-04** — Aynı dosya içi duplicate (business key) → ERROR / REJECT
-- [ ] **VD-05** — Çapraz-batch duplicate (SHA-256 file_hash) → WARNING / WARN
-- [ ] Her kural için `rule_code`, `severity`, `field_name`, `message`, `suggested_action` dönüşü
+- [x] `services/validator.py` — `IssueData` dataclass, `validate_record()`, `determine_status()`, `worst_status()`
+- [x] **VG-01** — Zorunlu alan eksikliği → ERROR / REJECT (21 kayıt)
+- [x] **VG-02** — Opsiyonel alan eksikliği → WARNING / WARN (124 kayıt)
+- [x] **VP-01a** — Performance > 100 + süre < 5 dk (artefakt) → ERROR / REJECT (144 kayıt)
+- [x] **VP-01b** — Performance > 100 + süre ≥ 5 dk (kalibrasyon) → WARNING / WARN (640 kayıt)
+- [x] **VQ-01** — Quality aralık dışı (< 0 veya > 100) → ERROR / REJECT (5 kayıt)
+- [x] **VO-01** — OEE > 100 → WARNING / WARN (543 kayıt)
+- [x] **VC-01** — Hatalı miktar > Üretilen miktar → ERROR / REJECT (166 kayıt)
+- [x] **VC-02** — Quality formülü tutarsızlığı (>1% sapma) → WARNING / WARN (16 kayıt)
+- [x] **VC-03** — Negatif miktar (üretilen veya hatalı) → ERROR / REJECT (5 kayıt)
+- [x] **VD-01** — Negatif çalışma süresi → ERROR / REJECT (3 kayıt)
+- [x] **VD-02** — Duruş toplamı tutarsızlığı (±0.5 tolerans) → WARNING / WARN (8 kayıt)
+- [x] **VD-03** — Sentinel/overflow duruş (250.0 dk) → WARNING / WARN (8 kayıt)
+- [x] **VL-01** — Availability=0 ama üretim var → ERROR / REJECT (9 kayıt)
+- [x] **VL-02** — Çalışma süresi=0 ama üretim var → ERROR / REJECT (11 kayıt)
+- [x] **VL-03** — Availability formülü sapması (>1%) → WARNING / WARN (626 kayıt)
+- [x] **VV-01** — Vardiya aralık dışı (1/2/3 dışı) → ERROR / REJECT
+- [x] **VF-01** — İş emri no format kontrolü (`^302\d{7}$`) → WARNING / WARN
+- [x] **VD-04** — Aynı dosya içi duplicate (business key) → ERROR / REJECT
+- [x] **VD-05** — Çapraz-batch duplicate (SHA-256 file_hash) → WARNING / WARN
+- [x] Her kural için `rule_code`, `severity`, `field_name`, `message`, `suggested_action` dönüşü
 
 ---
 
 ## 5. Import Servisi ve Router
 
-- [ ] `repositories/production_repo.py` — CRUD
-- [ ] `repositories/validation_repo.py` — CRUD
-- [ ] `services/import_service.py` — orchestration, duplicate check, batch yönetimi
-- [ ] `routers/import_router.py`
-  - [ ] `POST /api/import/upload` — tekil CSV yükle
-  - [ ] `POST /api/import/upload-multiple` — çoklu CSV birleştir
-  - [ ] `GET /api/import/batches` — import geçmişi
-  - [ ] `GET /api/import/batches/{id}` — batch detayı + özet rapor
-  - [ ] `GET /api/import/batches/{id}/progress` — ilerleme polling endpoint
+- [x] `services/import_service.py` — orchestration, duplicate check, batch yönetimi, validator entegrasyonu
+- [x] `routers/import_router.py`
+  - [x] `POST /api/import/preview` — CSV yükle, encoding tespiti, sütun mapping UI için hazırlık
+  - [x] `POST /api/import/confirm` — mapping onayla, import başlat
+  - [x] `GET /api/import/batches` — import geçmişi
+  - [x] `GET /api/import/batches/{id}` — batch detayı
 
 ---
 
 ## 6. Records Router
 
-- [ ] `routers/records_router.py`
-  - [ ] `GET /api/records` — filtreli liste (`date_from`, `date_to`, `shift`, `station`, `product`, `oee_min`, `oee_max`, `issues_only`)
-  - [ ] `GET /api/records/{id}` — tek kayıt detayı
-  - [ ] `PATCH /api/records/{id}` — manuel düzeltme
-  - [ ] `GET /api/records/export` — CSV export (aktif filtrelerle)
+- [x] `repositories/production_repo.py` — CRUD + export + clean unsent records
+- [x] `routers/records_router.py`
+  - [x] `GET /api/records` — filtreli + sayfalı liste
+  - [x] `GET /api/records/{id}` — tek kayıt detayı
+  - [x] `PATCH /api/records/{id}` — manuel düzeltme + audit trail
+  - [x] `GET /api/records/export` — CSV export (aktif filtrelerle)
 
 ---
 
 ## 7. Validation Router
 
-- [ ] `routers/validation_router.py`
-  - [ ] `GET /api/validation/issues` — tüm açık sorunlar
-  - [ ] `GET /api/validation/issues/{id}` — tek issue detayı
-  - [ ] `PATCH /api/validation/issues/{id}` — resolve / reject / correct (audit trail)
-  - [ ] `GET /api/validation/summary` — hata tipi dağılımı
-  - [ ] `GET /api/validation/export` — Excel/CSV validation raporu indirme (openpyxl)
+- [x] `repositories/validation_repo.py` — CRUD + summary (GROUP BY rule)
+- [x] `routers/validation_router.py`
+  - [x] `GET /api/validation/issues` — filtreli issue listesi
+  - [x] `GET /api/validation/issues/{id}` — tek issue detayı
+  - [x] `PATCH /api/validation/issues/{id}` — resolve / correct (audit trail)
+  - [x] `GET /api/validation/summary` — hata tipi dağılımı
+  - [x] `GET /api/validation/export` — Excel validation raporu (openpyxl)
 
 ---
 
-## 8. Dashboard Servisi ve Router
+## 8. Pydantic Şemaları
+
+- [x] `schemas/production.py` — PreviewResponse, ImportBatchResponse, ProductionRecordResponse, PatchRecordRequest, RecordsPageResponse
+- [x] `schemas/validation.py` — ValidationIssueResponse, ResolveIssueRequest, ValidationSummaryResponse
+- [x] `schemas/submission.py` — SubmissionResponse, SendSubmissionsResponse, SubmissionsPageResponse
+
+---
+
+## 9. FastAPI App
+
+- [x] `main.py` — lifespan, CORS (5173 + 4173), router mount'ları, /health endpoint
+
+---
+
+## 10. Dashboard Servisi ve Router
 
 - [ ] `services/dashboard_service.py` — OEE aggregation, KPI hesaplama
 - [ ] `routers/dashboard_router.py`
@@ -108,7 +124,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ---
 
-## 9. API Client ve Submission
+## 11. API Client ve Submission
 
 - [ ] `services/api_client.py`
   - [ ] `build_submission_payload()` — gün+vardiya bazında aggregate
@@ -118,7 +134,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
   - [ ] 401/422 → non-retryable, hata fırlat
   - [ ] Idempotency key: `"{production_date}_{shift}"`
   - [ ] Circuit breaker: 5 ardışık hata → OPEN, 60 sn sonra HALF-OPEN
-- [ ] `repositories/submission_repo.py` — CRUD
+- [x] `repositories/submission_repo.py` — create_pending, update_result, increment_retry
 - [ ] `routers/submission_router.py`
   - [ ] `POST /api/submissions/send` — BackgroundTasks ile async gönderim
   - [ ] `GET /api/submissions` — gönderim geçmişi
@@ -127,15 +143,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ---
 
-## 10. Pydantic Şemaları
-
-- [ ] `schemas/production.py` — request/response DTO'ları
-- [ ] `schemas/validation.py` — ValidationReport, ValidationIssue şemaları
-- [ ] `schemas/submission.py` — ApiSubmission şemaları
-
----
-
-## 11. Frontend — Altyapı
+## 12. Frontend — Altyapı
 
 - [x] `main.tsx` — React app entry point
 - [x] `App.tsx` — router yapısı (react-router-dom v6)
@@ -147,18 +155,18 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ---
 
-## 12. Frontend — Import Sayfası
+## 13. Frontend — Import Sayfası
 
-- [ ] `pages/ImportPage.tsx`
-- [ ] `components/import/CsvDropzone.tsx` — react-dropzone
-- [ ] `components/import/PreviewTable.tsx`
+- [x] `pages/ImportPage.tsx` — çok adımlı: upload → mapping → summary
+- [x] `components/import/CsvDropzone.tsx` — react-dropzone
+- [x] `components/import/ColumnMappingStep.tsx` — kullanıcı onaylı sütun eşleştirme
+- [x] `hooks/useImport.ts`
 - [ ] `components/import/ImportProgress.tsx` — polling ile ilerleme çubuğu
 - [ ] `components/import/ImportSummary.tsx`
-- [ ] `hooks/useImport.ts`
 
 ---
 
-## 13. Frontend — Dashboard Sayfası
+## 14. Frontend — Dashboard Sayfası
 
 - [ ] `pages/DashboardPage.tsx`
 - [ ] `components/dashboard/KpiCards.tsx`
@@ -170,7 +178,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ---
 
-## 14. Frontend — Records Sayfası
+## 15. Frontend — Records Sayfası
 
 - [ ] `pages/RecordsPage.tsx`
 - [ ] Filtreli tablo: `date_from`, `date_to`, `shift`, `station`, `oee_min/max`, `issues_only`
@@ -180,18 +188,18 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ---
 
-## 15. Frontend — Validation Sayfası
+## 16. Frontend — Validation Sayfası
 
 - [ ] `pages/ValidationPage.tsx`
 - [ ] `components/validation/ValidationReportTable.tsx`
 - [ ] `components/validation/EditRecordModal.tsx`
 - [ ] `components/validation/AuditTrailDrawer.tsx`
-- [ ] Excel/CSV validation raporu indirme butonu
+- [ ] Excel validation raporu indirme butonu
 - [ ] `hooks/useValidation.ts`
 
 ---
 
-## 16. Frontend — Submissions Sayfası
+## 17. Frontend — Submissions Sayfası
 
 - [ ] `pages/SubmissionsPage.tsx`
 - [ ] Gönderim geçmişi tablosu (tarih, vardiya, OEE, durum)
@@ -200,7 +208,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ---
 
-## 17. Testler
+## 18. Testler
 
 - [ ] `tests/test_validator.py` — tüm validation kuralları için unit testler (pytest)
 - [ ] `tests/test_import_service.py` — duplicate check, batch oluşturma
@@ -208,10 +216,10 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ---
 
-## 18. Dokümantasyon ve Teslim
+## 19. Dokümantasyon ve Teslim
 
-- [ ] `backend/app/main.py` — `app.title`, `app.description`, `app.version` doldur (OpenAPI/Swagger)
-- [ ] `ai_usage/01_project_planning.md` — AI kullanım şeffaflığı belgesi
+- [x] `backend/app/main.py` — `app.title`, `app.description`, `app.version` dolduruldu (OpenAPI/Swagger)
+- [ ] `ai_usage/` — kullanıcı tarafından doldurulacak (AI konuşma exportları)
 - [ ] `README.md` şu bölümleri içermeli:
   - [ ] Proje Amacı
   - [ ] Hızlı Kurulum (3 komuttan az)
@@ -221,7 +229,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
   - [ ] Kullanılan Kütüphaneler ve Seçim Gerekçeleri
   - [ ] Yapamadığım / Vakit Yetmeyen Kısımlar
   - [ ] Daha Fazla Zaman Olsaydı Neler Yapardım?
-- [ ] `data/production_data.csv` — test verisi repoda mevcut
+- [x] `data/production_data.csv` — test verisi repoda mevcut
 
 ---
 

@@ -217,6 +217,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 ## 19. Dokümantasyon ve Teslim
 
 - [x] `backend/app/main.py` — `app.title`, `app.description`, `app.version` dolduruldu (OpenAPI/Swagger)
+- [x] Alembic migration — `alembic/env.py` yapılandırıldı, initial schema migration oluşturuldu; `main.py` lifespan'de `alembic upgrade head` çalışıyor
 - [ ] `ai_usage/` — kullanıcı tarafından doldurulacak (AI konuşma exportları)
 - [x] `README.md` şu bölümleri içermeli:
   - [x] Proje Amacı

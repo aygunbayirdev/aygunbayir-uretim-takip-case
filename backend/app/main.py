@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import create_tables
-from app.routers import import_router, records_router, validation_router
+from app.routers import import_router, records_router, validation_router, dashboard_router
 
 # Base.metadata'ya kayıt için model import'ları
 import app.models.import_batch       # noqa: F401
@@ -40,8 +40,8 @@ app.add_middleware(
 app.include_router(import_router.router)
 app.include_router(records_router.router)
 app.include_router(validation_router.router)
+app.include_router(dashboard_router.router)
 # Aşağıdaki router'lar implement edildikçe mount edilecek:
-# app.include_router(dashboard_router.router)
 # app.include_router(submission_router.router)
 
 

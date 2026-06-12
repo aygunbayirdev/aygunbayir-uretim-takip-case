@@ -114,13 +114,14 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 10. Dashboard Servisi ve Router
 
-- [ ] `services/dashboard_service.py` — OEE aggregation, KPI hesaplama
-- [ ] `routers/dashboard_router.py`
-  - [ ] `GET /api/dashboard/kpi` — özet KPI kartları
-  - [ ] `GET /api/dashboard/oee-trend` — günlük/haftalık OEE trend
-  - [ ] `GET /api/dashboard/by-shift` — vardiya bazlı karşılaştırma
-  - [ ] `GET /api/dashboard/by-station` — istasyon bazlı OEE ranking
-  - [ ] `GET /api/dashboard/quality-dist` — fire oranı dağılımı
+- [x] `schemas/dashboard.py` — KpiResponse, OeeTrendItem, ShiftStatItem, StationStatItem, QualityDistItem
+- [x] `services/dashboard_service.py` — OEE aggregation, KPI hesaplama (rejected kayıtlar hariç)
+- [x] `routers/dashboard_router.py`
+  - [x] `GET /api/dashboard/kpi` — özet KPI kartları
+  - [x] `GET /api/dashboard/oee-trend` — günlük OEE trend (date_from/to filtreli)
+  - [x] `GET /api/dashboard/by-shift` — vardiya bazlı karşılaştırma
+  - [x] `GET /api/dashboard/by-station` — istasyon bazlı OEE ranking
+  - [x] `GET /api/dashboard/quality-dist` — fire oranı dağılımı
 
 ---
 

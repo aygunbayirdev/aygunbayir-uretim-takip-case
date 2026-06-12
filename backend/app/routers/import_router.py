@@ -15,6 +15,24 @@ from app.services.import_service import import_csv
 router = APIRouter(prefix="/api/import", tags=["import"])
 
 
+@router.get("/batches", response_model=list[ImportBatchResponse])
+def list_batches(db: Session = Depends(get_db)) -> list[ImportBatchResponse]:
+    batches = (
+        db.query(ImportBatch)
+        .order_by(ImportBatch.imported_at.desc())
+        .all()
+    )
+    return [ImportBatchResponse.model_validate(b) for b in batches]
+
+
+@router.get("/batches/{batch_id}", response_model=ImportBatchResponse)
+def get_batch(batch_id: int, db: Session = Depends(get_db)) -> ImportBatchResponse:
+    batch = db.query(ImportBatch).filter(ImportBatch.id == batch_id).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch bulunamadı.")
+    return ImportBatchResponse.model_validate(batch)
+
+
 @router.post("/preview", response_model=PreviewResponse)
 async def preview_import(
     file: UploadFile = File(...),

@@ -1,11 +1,29 @@
 import { useState } from 'react'
-import { Send, RefreshCw, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react'
+import { Send, RefreshCw, ChevronDown, ChevronUp, AlertCircle, CheckCircle, Info } from 'lucide-react'
 import { useSubmissions, useSendSubmissions, useRetrySubmission } from '../hooks/useSubmissions'
 import StatusBadge from '../components/shared/StatusBadge'
 import type { ApiSubmission } from '../types'
 
+function parseResultMessage(sub: ApiSubmission): { type: 'success' | 'warning' | 'error'; text: string } {
+  const body = sub.response_body ?? ''
+  if (sub.status === 'failed') {
+    return { type: 'error', text: `Gönderim başarısız: ${body}` }
+  }
+  if (body === 'Gönderilecek kayıt yok.' || body.startsWith('0 grup')) {
+    return { type: 'warning', text: 'Gönderilecek temiz kayıt bulunamadı.' }
+  }
+  const match = body.match(/^(\d+) grup gönderildi/)
+  if (match) {
+    const count = parseInt(match[1], 10)
+    const suffix = body.includes('Hata:') ? ` (bazı gruplar başarısız oldu)` : ''
+    return { type: count > 0 ? 'success' : 'warning', text: `${count} gün+vardiya grubu API'ye gönderildi${suffix}.` }
+  }
+  return { type: 'success', text: body || 'Gönderim tamamlandı.' }
+}
+
 export default function SubmissionsPage() {
   const [isPolling, setIsPolling] = useState(false)
+  const [lastSubmissionId, setLastSubmissionId] = useState<number | null>(null)
   const { data, isLoading } = useSubmissions(isPolling)
   const send = useSendSubmissions()
   const retry = useRetrySubmission()
@@ -14,9 +32,14 @@ export default function SubmissionsPage() {
   const items = data?.items ?? []
   const hasProcessing = items.some((s) => s.status === 'processing' || s.status === 'pending')
 
+  const lastSub = lastSubmissionId != null ? items.find((s) => s.id === lastSubmissionId) : null
+  const showResult = !isPolling && !hasProcessing && lastSub != null && lastSub.status !== 'processing'
+  const resultMsg = lastSub ? parseResultMessage(lastSub) : null
+
   const handleSend = () => {
     send.mutate(undefined, {
-      onSuccess: () => {
+      onSuccess: (res) => {
+        setLastSubmissionId(res.submission_id)
         setIsPolling(true)
         setTimeout(() => setIsPolling(false), 10000)
       },
@@ -54,15 +77,27 @@ export default function SubmissionsPage() {
         </div>
       )}
 
-      {/* Send success (not polling anymore) */}
-      {send.isSuccess && !isPolling && !send.isError && (
+      {/* Contextual result banner */}
+      {showResult && resultMsg && resultMsg.type === 'success' && (
         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
           <CheckCircle size={15} className="shrink-0" />
-          Gönderim tamamlandı.
+          {resultMsg.text}
+        </div>
+      )}
+      {showResult && resultMsg && resultMsg.type === 'warning' && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
+          <Info size={15} className="shrink-0" />
+          {resultMsg.text}
+        </div>
+      )}
+      {showResult && resultMsg && resultMsg.type === 'error' && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+          <AlertCircle size={15} className="shrink-0" />
+          {resultMsg.text}
         </div>
       )}
 
-      {/* Send error */}
+      {/* Send POST error */}
       {send.isError && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
           <AlertCircle size={15} className="shrink-0" />
@@ -78,13 +113,10 @@ export default function SubmissionsPage() {
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="px-4 py-3 w-10" />
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Tarih</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Vardiya</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">OEE</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Makine</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Üretim</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">HTTP</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Gönderim Tarihi</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Durum</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Gönderilen Kayıt</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Yanıt Özeti</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Gönderim Zamanı</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Retry</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">İşlem</th>
@@ -93,13 +125,13 @@ export default function SubmissionsPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                     Yükleniyor...
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-400">
                     Henüz gönderim yapılmamış.
                   </td>
                 </tr>
@@ -132,6 +164,9 @@ interface RowProps {
 }
 
 function SubmissionRow({ item, expanded, onToggle, onRetry, retrying }: RowProps) {
+  const body = item.response_body ?? ''
+  const summary = body.length > 60 ? body.slice(0, 60) + '…' : body
+
   return (
     <>
       <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
@@ -148,29 +183,14 @@ function SubmissionRow({ item, expanded, onToggle, onRetry, retrying }: RowProps
         </td>
         <td className="px-4 py-3 text-gray-500 text-xs">{item.id}</td>
         <td className="px-4 py-3 font-medium text-gray-800">{item.submission_date}</td>
-        <td className="px-4 py-3 text-gray-700">{item.shift}. Vardiya</td>
-        <td className="px-4 py-3 text-gray-700">
-          {item.oe_value != null ? `${item.oe_value.toFixed(2)}%` : '—'}
-        </td>
-        <td className="px-4 py-3 text-gray-700">{item.machine_count ?? '—'}</td>
-        <td className="px-4 py-3 text-gray-700">
-          {item.total_units != null ? item.total_units.toLocaleString('tr-TR') : '—'}
-        </td>
-        <td className="px-4 py-3">
-          {item.http_status != null ? (
-            <span
-              className={`font-mono text-xs font-medium ${
-                item.http_status === 200 ? 'text-green-700' : 'text-red-600'
-              }`}
-            >
-              {item.http_status}
-            </span>
-          ) : (
-            <span className="text-gray-400 text-xs">—</span>
-          )}
-        </td>
         <td className="px-4 py-3">
           <StatusBadge status={item.status} />
+        </td>
+        <td className="px-4 py-3 text-gray-700 text-center">
+          {item.records_count != null ? item.records_count.toLocaleString('tr-TR') : '—'}
+        </td>
+        <td className="px-4 py-3 text-gray-500 text-xs max-w-xs truncate" title={body}>
+          {summary || '—'}
         </td>
         <td className="px-4 py-3 text-gray-500 text-xs">
           {item.submitted_at ? formatDateTime(item.submitted_at) : '—'}
@@ -192,7 +212,7 @@ function SubmissionRow({ item, expanded, onToggle, onRetry, retrying }: RowProps
 
       {expanded && item.response_body && (
         <tr className="border-b border-gray-100 bg-gray-50">
-          <td colSpan={12} className="px-6 py-3">
+          <td colSpan={9} className="px-6 py-3">
             <p className="text-xs font-semibold text-gray-500 mb-1">API Yanıtı</p>
             <pre className="text-xs text-gray-700 bg-white border border-gray-200 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all">
               {formatJson(item.response_body)}

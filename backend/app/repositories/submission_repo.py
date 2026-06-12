@@ -9,7 +9,7 @@ from app.models.api_submission import ApiSubmission
 def get_submissions(db: Session) -> list[ApiSubmission]:
     return (
         db.query(ApiSubmission)
-        .filter(ApiSubmission.shift != 0)
+        .filter(ApiSubmission.shift == 0)
         .order_by(ApiSubmission.submitted_at.desc().nullslast())
         .all()
     )

@@ -37,7 +37,7 @@ temiz kayıtlar REST API ile hedef sisteme gönderilir.
 ## 2. Dizin Yapısı
 
 ```
-aygun-uretim-takip-case/
+aygunbayir-uretim-takip-case/
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py

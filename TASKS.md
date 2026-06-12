@@ -151,8 +151,9 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 - [x] `services/api.ts` — Axios instance + tüm API çağrıları
 - [x] `store/filterStore.ts` — Zustand global filtre state
 - [x] `types/index.ts` — shared TypeScript tipleri
-- [ ] Layout: `components/layout/Sidebar.tsx` ve `TopBar.tsx`
-- [ ] `components/shared/FilterBar.tsx`, `DataTable.tsx`, `StatusBadge.tsx`
+- [x] Layout: `components/layout/Sidebar.tsx`, `TopBar.tsx`, `Layout.tsx`
+- [x] `components/shared/StatusBadge.tsx`
+- [ ] `components/shared/FilterBar.tsx`, `DataTable.tsx`
 
 ---
 
@@ -169,13 +170,13 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 14. Frontend — Dashboard Sayfası
 
-- [ ] `pages/DashboardPage.tsx`
-- [ ] `components/dashboard/KpiCards.tsx`
-- [ ] `components/dashboard/OeeTrendChart.tsx` — Recharts
-- [ ] `components/dashboard/ShiftComparisonChart.tsx` — Recharts
-- [ ] `components/dashboard/StationRankingChart.tsx` — Recharts
-- [ ] `components/dashboard/QualityDistributionChart.tsx` — Recharts
-- [ ] `hooks/useDashboard.ts`
+- [x] `pages/DashboardPage.tsx` — skeleton loading, empty state, error state
+- [x] `components/dashboard/KpiCards.tsx` — 4 kart: OEE, Üretim, Fire, Kayıt Durumu
+- [x] `components/dashboard/OeeTrendChart.tsx` — Recharts LineChart
+- [x] `components/dashboard/ShiftComparisonChart.tsx` — Recharts BarChart
+- [x] `components/dashboard/StationRankingChart.tsx` — yatay BarChart, renk kodlu
+- [x] `components/dashboard/QualityDistributionChart.tsx` — Recharts BarChart
+- [x] `hooks/useDashboard.ts` — React Query hooks
 
 ---
 

@@ -736,7 +736,7 @@ pytest-asyncio
 - Component prop'ları interface ile tanımlanır.
 
 ### Genel
-- Tüm commit mesajları Türkçe veya İngilizce, imperative mood.
+- Tüm commit mesajları **İngilizce** ve imperative mood. Türkçe kullanılmaz.
 - Her yeni servis/repo/router tamamlandıktan sonra commit.
 - `.env` asla commit'lenmez.
 

@@ -12,7 +12,9 @@ def get_issues(
     resolved: bool | None = None,
     severity: str | None = None,
     rule_code: str | None = None,
-) -> list[ValidationIssue]:
+    page: int = 1,
+    page_size: int = 50,
+) -> tuple[list[ValidationIssue], int]:
     query = db.query(ValidationIssue)
     if record_id is not None:
         query = query.filter(ValidationIssue.record_id == record_id)
@@ -22,7 +24,10 @@ def get_issues(
         query = query.filter(ValidationIssue.severity == severity)
     if rule_code:
         query = query.filter(ValidationIssue.rule_code == rule_code)
-    return query.order_by(ValidationIssue.id.asc()).all()
+    query = query.order_by(ValidationIssue.id.asc())
+    total = query.count()
+    items = query.offset((page - 1) * page_size).limit(page_size).all()
+    return items, total
 
 
 def get_issue_by_id(db: Session, issue_id: int) -> ValidationIssue | None:

@@ -153,6 +153,13 @@ export interface ValidationIssue {
   correction_note: string | null
 }
 
+export interface ValidationIssuesPage {
+  items: ValidationIssue[]
+  total: number
+  page: number
+  page_size: number
+}
+
 export interface ResolveIssueRequest {
   resolved: boolean
   resolved_by?: string

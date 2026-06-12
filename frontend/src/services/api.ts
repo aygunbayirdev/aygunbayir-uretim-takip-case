@@ -18,6 +18,7 @@ import type {
   ApiSubmission,
   SubmissionsPage,
   ValidationIssue,
+  ValidationIssuesPage,
   ValidationSummary,
 } from '../types'
 
@@ -96,8 +97,10 @@ export const validationApi = {
     resolved?: boolean
     severity?: string
     rule_code?: string
-  } = {}): Promise<ValidationIssue[]> => {
-    const { data } = await api.get<ValidationIssue[]>('/validation/issues', { params })
+    page?: number
+    page_size?: number
+  } = {}): Promise<ValidationIssuesPage> => {
+    const { data } = await api.get<ValidationIssuesPage>('/validation/issues', { params })
     return data
   },
 

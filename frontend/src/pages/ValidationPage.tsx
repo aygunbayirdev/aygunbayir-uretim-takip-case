@@ -126,17 +126,28 @@ function ResolveModal({ issue, onClose }: ResolveModalProps) {
 // ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
+const PAGE_SIZE = 50
+
 export default function ValidationPage() {
   const [showResolved, setShowResolved] = useState(false)
   const [filterSeverity, setFilterSeverity] = useState<'' | 'error' | 'warning'>('')
   const [filterRule, setFilterRule] = useState('')
+  const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<ValidationIssue | null>(null)
 
-  const { data: issues = [], isLoading } = useValidationIssues({
+  const resetPage = () => setPage(1)
+
+  const { data, isLoading } = useValidationIssues({
     resolved: showResolved ? undefined : false,
     severity: filterSeverity || undefined,
     rule_code: filterRule || undefined,
+    page,
+    page_size: PAGE_SIZE,
   })
+
+  const issues = data?.items ?? []
+  const total = data?.total ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const handleExport = () => window.open(validationApi.exportUrl(), '_blank')
 
@@ -147,10 +158,9 @@ export default function ValidationPage() {
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Filtreler */}
         <select
           value={filterSeverity}
-          onChange={(e) => setFilterSeverity(e.target.value as '' | 'error' | 'warning')}
+          onChange={(e) => { setFilterSeverity(e.target.value as '' | 'error' | 'warning'); resetPage() }}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Tüm Seviyeler</option>
@@ -162,7 +172,7 @@ export default function ValidationPage() {
           type="text"
           placeholder="Kural kodu (VG-01...)"
           value={filterRule}
-          onChange={(e) => setFilterRule(e.target.value)}
+          onChange={(e) => { setFilterRule(e.target.value); resetPage() }}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-44 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
@@ -170,14 +180,14 @@ export default function ValidationPage() {
           <input
             type="checkbox"
             checked={showResolved}
-            onChange={(e) => setShowResolved(e.target.checked)}
+            onChange={(e) => { setShowResolved(e.target.checked); resetPage() }}
             className="rounded"
           />
           Çözülmüşleri göster
         </label>
 
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-sm text-gray-500">{issues.length} issue</span>
+          <span className="text-sm text-gray-500">{total.toLocaleString('tr-TR')} issue</span>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -249,6 +259,34 @@ export default function ValidationPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <span className="text-xs text-gray-500">
+              {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, total)} / {total.toLocaleString('tr-TR')}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-white transition-colors"
+              >
+                ← Önceki
+              </button>
+              <span className="px-3 py-1.5 text-xs text-gray-600">
+                {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-white transition-colors"
+              >
+                Sonraki →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {selected && (

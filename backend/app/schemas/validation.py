@@ -32,6 +32,13 @@ class RuleSummaryItem(BaseModel):
     count: int
 
 
+class ValidationIssuesPageResponse(BaseModel):
+    items: list[ValidationIssueResponse]
+    total: int
+    page: int
+    page_size: int
+
+
 class ValidationSummaryResponse(BaseModel):
     total_issues: int
     open_issues: int

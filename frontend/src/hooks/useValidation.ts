@@ -7,6 +7,8 @@ export function useValidationIssues(params: {
   resolved?: boolean
   severity?: string
   rule_code?: string
+  page?: number
+  page_size?: number
 } = {}) {
   return useQuery({
     queryKey: ['validation', 'issues', params],

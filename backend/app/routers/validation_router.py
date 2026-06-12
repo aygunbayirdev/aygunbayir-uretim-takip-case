@@ -15,22 +15,38 @@ from app.repositories.validation_repo import (
 from app.schemas.validation import (
     ResolveIssueRequest,
     ValidationIssueResponse,
+    ValidationIssuesPageResponse,
     ValidationSummaryResponse,
 )
 
 router = APIRouter(prefix="/api/validation", tags=["validation"])
 
 
-@router.get("/issues", response_model=list[ValidationIssueResponse])
+@router.get("/issues", response_model=ValidationIssuesPageResponse)
 def list_issues(
     record_id: int | None = Query(None),
     resolved: bool | None = Query(None),
     severity: str | None = Query(None),
     rule_code: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
-) -> list[ValidationIssueResponse]:
-    issues = get_issues(db, record_id=record_id, resolved=resolved, severity=severity, rule_code=rule_code)
-    return [ValidationIssueResponse.model_validate(i) for i in issues]
+) -> ValidationIssuesPageResponse:
+    items, total = get_issues(
+        db,
+        record_id=record_id,
+        resolved=resolved,
+        severity=severity,
+        rule_code=rule_code,
+        page=page,
+        page_size=page_size,
+    )
+    return ValidationIssuesPageResponse(
+        items=[ValidationIssueResponse.model_validate(i) for i in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/issues/{issue_id}", response_model=ValidationIssueResponse)
@@ -69,7 +85,7 @@ def summary(db: Session = Depends(get_db)) -> ValidationSummaryResponse:
 @router.get("/export")
 def export_issues(db: Session = Depends(get_db)) -> StreamingResponse:
     """Açık validation issue'larını Excel dosyası olarak indir."""
-    issues = get_issues(db, resolved=False)
+    issues, _ = get_issues(db, resolved=False, page=1, page_size=100_000)
 
     wb = openpyxl.Workbook()
     ws = wb.active

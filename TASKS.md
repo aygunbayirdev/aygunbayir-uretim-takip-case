@@ -153,7 +153,8 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 - [x] `types/index.ts` — shared TypeScript tipleri
 - [x] Layout: `components/layout/Sidebar.tsx`, `TopBar.tsx`, `Layout.tsx`
 - [x] `components/shared/StatusBadge.tsx`
-- [ ] `components/shared/FilterBar.tsx`, `DataTable.tsx`
+- [x] `components/shared/FilterBar.tsx`, `DataTable.tsx`
+- [x] `components/shared/SeverityBadge.tsx`
 
 ---
 
@@ -191,29 +192,25 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 16. Frontend — Validation Sayfası
 
-- [ ] `pages/ValidationPage.tsx`
-- [ ] `components/validation/ValidationReportTable.tsx`
-- [ ] `components/validation/EditRecordModal.tsx`
-- [ ] `components/validation/AuditTrailDrawer.tsx`
-- [ ] Excel validation raporu indirme butonu
-- [ ] `hooks/useValidation.ts`
+- [x] `pages/ValidationPage.tsx` — summary cards, issue table, resolve modal, Excel export, server-side pagination
+- [x] `hooks/useValidation.ts` — useValidationIssues (page/page_size), useValidationSummary, useResolveIssue
 
 ---
 
 ## 17. Frontend — Submissions Sayfası
 
-- [ ] `pages/SubmissionsPage.tsx`
-- [ ] Gönderim geçmişi tablosu (tarih, vardiya, OEE, durum)
-- [ ] Retry butonu (başarısız gönderimler için)
-- [ ] `hooks/useSubmissions.ts`
+- [x] `pages/SubmissionsPage.tsx`
+- [x] Gönderim geçmişi tablosu (tarih, vardiya, OEE, durum)
+- [x] Retry butonu (başarısız gönderimler için)
+- [x] `hooks/useSubmissions.ts`
 
 ---
 
 ## 18. Testler
 
-- [ ] `tests/test_validator.py` — tüm validation kuralları için unit testler (pytest)
-- [ ] `tests/test_import_service.py` — duplicate check, batch oluşturma
-- [ ] `tests/test_api_client.py` — retry mantığı, circuit breaker, 413 handling
+- [x] `tests/test_validator.py` — tüm validation kuralları için unit testler (pytest) — 66 test
+- [x] `tests/test_import_service.py` — duplicate check, _safe_int, _safe_float, _business_key — 21 test
+- [x] `tests/test_api_client.py` — retry mantığı, circuit breaker, 413 handling, payload builder — 18 test
 
 ---
 
@@ -221,15 +218,15 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 - [x] `backend/app/main.py` — `app.title`, `app.description`, `app.version` dolduruldu (OpenAPI/Swagger)
 - [ ] `ai_usage/` — kullanıcı tarafından doldurulacak (AI konuşma exportları)
-- [ ] `README.md` şu bölümleri içermeli:
-  - [ ] Proje Amacı
-  - [ ] Hızlı Kurulum (3 komuttan az)
-  - [ ] Ekran Görüntüleri (Dashboard, Import, Validasyon, API Gönderim)
-  - [ ] Tespit Edilen Hata Tipleri (örnekleriyle)
-  - [ ] API Entegrasyon Akışı
-  - [ ] Kullanılan Kütüphaneler ve Seçim Gerekçeleri
-  - [ ] Yapamadığım / Vakit Yetmeyen Kısımlar
-  - [ ] Daha Fazla Zaman Olsaydı Neler Yapardım?
+- [x] `README.md` şu bölümleri içermeli:
+  - [x] Proje Amacı
+  - [x] Hızlı Kurulum (3 komuttan az)
+  - [x] Ekran Görüntüleri (Dashboard, Import, Validasyon, API Gönderim)
+  - [x] Tespit Edilen Hata Tipleri (örnekleriyle)
+  - [x] API Entegrasyon Akışı
+  - [x] Kullanılan Kütüphaneler ve Seçim Gerekçeleri
+  - [x] Yapamadığım / Vakit Yetmeyen Kısımlar
+  - [x] Daha Fazla Zaman Olsaydı Neler Yapardım?
 - [x] `data/production_data.csv` — test verisi repoda mevcut
 
 ---

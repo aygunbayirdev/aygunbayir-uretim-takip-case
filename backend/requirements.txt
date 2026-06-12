@@ -1,0 +1,11 @@
+fastapi>=0.111
+uvicorn[standard]
+sqlalchemy>=2.0
+pydantic-settings
+pandas
+httpx
+python-multipart
+chardet
+openpyxl
+pytest
+pytest-asyncio

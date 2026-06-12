@@ -6,23 +6,23 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 1. Proje Altyapısı
 
-- [ ] Dizin yapısını oluştur (`backend/`, `frontend/`, `ai_usage/`)
-- [ ] `backend/.env.example` dosyasını oluştur
-- [ ] `backend/requirements.txt` dosyasını oluştur
-- [ ] `frontend/package.json` bağımlılıklarını tanımla
-- [ ] `frontend/vite.config.ts` ve `tsconfig.json` yapılandır
-- [ ] `.gitignore` oluştur (`.env`, `__pycache__`, `node_modules`, `*.db`)
+- [x] Dizin yapısını oluştur (`backend/`, `frontend/`, `ai_usage/`)
+- [x] `backend/.env.example` dosyasını oluştur
+- [x] `backend/requirements.txt` dosyasını oluştur
+- [x] `frontend/package.json` bağımlılıklarını tanımla
+- [x] `frontend/vite.config.ts` ve `tsconfig.json` yapılandır
+- [x] `.gitignore` oluştur (`.env`, `__pycache__`, `node_modules`, `*.db`)
 
 ---
 
 ## 2. Veritabanı Şeması ve Modeller
 
-- [ ] `database.py` — SQLAlchemy engine, SessionLocal, Base
+- [x] `database.py` — SQLAlchemy engine, SessionLocal, Base
 - [ ] `models/import_batch.py` — `import_batches` tablosu (file_hash UNIQUE)
 - [ ] `models/production_record.py` — `production_records` tablosu (csv_row_number dahil)
 - [ ] `models/validation_issue.py` — `validation_issues` tablosu
 - [ ] `models/api_submission.py` — `api_submissions` tablosu (idempotency_key UNIQUE)
-- [ ] `config.py` — pydantic-settings, `.env` okuma
+- [x] `config.py` — pydantic-settings, `.env` okuma
 
 ---
 
@@ -137,11 +137,11 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 11. Frontend — Altyapı
 
-- [ ] `main.tsx` — React app entry point
-- [ ] `App.tsx` — router yapısı (react-router-dom v6)
-- [ ] `services/api.ts` — Axios instance + tüm API çağrıları
-- [ ] `store/filterStore.ts` — Zustand global filtre state
-- [ ] `types/index.ts` — shared TypeScript tipleri
+- [x] `main.tsx` — React app entry point
+- [x] `App.tsx` — router yapısı (react-router-dom v6)
+- [x] `services/api.ts` — Axios instance + tüm API çağrıları
+- [x] `store/filterStore.ts` — Zustand global filtre state
+- [x] `types/index.ts` — shared TypeScript tipleri
 - [ ] Layout: `components/layout/Sidebar.tsx` ve `TopBar.tsx`
 - [ ] `components/shared/FilterBar.tsx`, `DataTable.tsx`, `StatusBadge.tsx`
 

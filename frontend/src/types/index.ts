@@ -60,6 +60,17 @@ export interface ImportBatch {
   accepted_rows: number
   rejected_rows: number
   status: BatchStatus
+  processed_rows: number
+}
+
+export interface BatchProgress {
+  batch_id: number
+  status: string
+  total_rows: number
+  processed_rows: number
+  percentage: number
+  accepted_rows: number | null
+  rejected_rows: number | null
 }
 
 /** confirm endpoint'inden dönen özet — ImportBatch ile aynı shape */

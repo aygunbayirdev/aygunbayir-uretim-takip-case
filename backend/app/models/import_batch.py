@@ -18,3 +18,4 @@ class ImportBatch(Base):
     rejected_rows: Mapped[int | None] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(Text, default="processing", nullable=False)
     file_hash: Mapped[str | None] = mapped_column(Text, unique=True)
+    processed_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

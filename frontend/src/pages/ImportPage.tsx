@@ -85,33 +85,73 @@ function FileStatusRow({ entry }: { entry: FileEntry }) {
 function ProgressStep({ entries }: { entries: FileEntry[] }) {
   const actionable = entries.filter((e) => !e.isDuplicateInBatch && e.preview?.duplicate_batch_id === null)
 
+  const totalPct = actionable.length > 0
+    ? Math.round(actionable.reduce((sum, e) => sum + e.progress, 0) / actionable.length)
+    : 0
+  const doneCount = actionable.filter(
+    (e) => e.batchStatus === 'completed' || e.batchStatus === 'failed' || e.error,
+  ).length
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <h2 className="text-lg font-semibold text-gray-800">İçe Aktarılıyor</h2>
-      <div className="space-y-2">
+
+      {/* Genel ilerleme */}
+      <div>
+        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+          <span>{doneCount} / {actionable.length} dosya tamamlandı</span>
+          <span className="font-medium text-gray-700">{totalPct}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div
+            className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${totalPct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Dosya bazlı ilerleme */}
+      <div className="space-y-3">
         {actionable.map((entry) => {
           let icon: ReactNode
           let statusText: string
+          let barColor: string
 
           if (entry.error) {
-            icon = <XCircle size={15} className="text-red-500" />
+            icon = <XCircle size={15} className="text-red-500 shrink-0" />
             statusText = entry.error
+            barColor = 'bg-red-400'
           } else if (entry.batchStatus === 'completed') {
-            icon = <CheckCircle size={15} className="text-green-500" />
-            statusText = `Tamamlandı — ${entry.batchResult?.accepted_rows ?? 0} kabul, ${entry.batchResult?.rejected_rows ?? 0} reddedildi`
+            icon = <CheckCircle size={15} className="text-green-500 shrink-0" />
+            statusText = `${entry.batchResult?.accepted_rows ?? 0} kabul · ${entry.batchResult?.rejected_rows ?? 0} reddedildi`
+            barColor = 'bg-green-500'
           } else if (entry.batchStatus === 'failed') {
-            icon = <XCircle size={15} className="text-red-500" />
+            icon = <XCircle size={15} className="text-red-500 shrink-0" />
             statusText = 'Import başarısız'
+            barColor = 'bg-red-400'
           } else {
-            icon = <Loader2 size={15} className="animate-spin text-blue-500" />
-            statusText = entry.batchId ? 'İşleniyor...' : 'Başlatılıyor...'
+            icon = <Loader2 size={15} className="animate-spin text-blue-500 shrink-0" />
+            statusText = entry.batchId
+              ? `${entry.progress}% — ${entry.batchResult?.total_rows ?? '...'} satır işleniyor`
+              : 'Başlatılıyor...'
+            barColor = 'bg-blue-500'
           }
 
           return (
-            <div key={entry.id} className="flex items-center gap-3 py-2.5 px-4 rounded-lg border border-gray-200 bg-white">
-              {icon}
-              <span className="flex-1 text-sm text-gray-800 truncate">{entry.file.name}</span>
-              <span className="text-xs text-gray-500">{statusText}</span>
+            <div key={entry.id} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+              <div className="flex items-center gap-3">
+                {icon}
+                <span className="flex-1 text-sm text-gray-800 truncate">{entry.file.name}</span>
+                <span className="text-xs text-gray-500 shrink-0">{statusText}</span>
+              </div>
+              {entry.batchId !== null && (
+                <div className="mt-2 w-full bg-gray-100 rounded-full h-1.5">
+                  <div
+                    className={`${barColor} h-1.5 rounded-full transition-all duration-300 ease-out`}
+                    style={{ width: `${entry.progress}%` }}
+                  />
+                </div>
+              )}
             </div>
           )
         })}

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import type {
+  BatchProgress,
   ColumnMappingItem,
   ImportBatch,
   ImportSummary,
@@ -53,6 +54,11 @@ export const importApi = {
 
   getBatch: async (id: number): Promise<ImportBatch> => {
     const { data } = await api.get<ImportBatch>(`/import/batches/${id}`)
+    return data
+  },
+
+  getBatchProgress: async (id: number): Promise<BatchProgress> => {
+    const { data } = await api.get<BatchProgress>(`/import/batches/${id}/progress`)
     return data
   },
 }

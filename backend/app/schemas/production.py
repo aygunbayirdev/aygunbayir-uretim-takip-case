@@ -18,6 +18,7 @@ class PreviewResponse(BaseModel):
     encoding: str
     file_hash: str
     columns: list[ColumnInfoSchema]
+    sample_rows: list[dict[str, str]] = []
     duplicate_batch_id: int | None = None  # None = temiz, int = daha önce yüklendi
 
 
@@ -45,6 +46,17 @@ class ImportBatchResponse(BaseModel):
     accepted_rows: int
     rejected_rows: int
     status: str
+    processed_rows: int = 0
+
+
+class BatchProgressResponse(BaseModel):
+    batch_id: int
+    status: str
+    total_rows: int
+    processed_rows: int
+    percentage: int              # 0-100
+    accepted_rows: int | None    # sadece status=completed'da dolu
+    rejected_rows: int | None    # sadece status=completed'da dolu
 
 
 # ---------------------------------------------------------------------------

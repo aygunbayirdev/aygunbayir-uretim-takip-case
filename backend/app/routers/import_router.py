@@ -1,16 +1,17 @@
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.import_batch import ImportBatch
 from app.schemas.production import (
+    BatchProgressResponse,
     ColumnInfoSchema,
     ImportBatchResponse,
     ImportConfirmRequest,
     PreviewResponse,
 )
-from app.services.csv_parser import parse_preview
-from app.services.import_service import import_csv
+from app.services.csv_parser import get_temp_file, parse_preview
+from app.services.import_service import run_import_background
 
 router = APIRouter(prefix="/api/import", tags=["import"])
 
@@ -23,6 +24,28 @@ def list_batches(db: Session = Depends(get_db)) -> list[ImportBatchResponse]:
         .all()
     )
     return [ImportBatchResponse.model_validate(b) for b in batches]
+
+
+@router.get("/batches/{batch_id}/progress", response_model=BatchProgressResponse)
+def get_batch_progress(batch_id: int, db: Session = Depends(get_db)) -> BatchProgressResponse:
+    batch = db.query(ImportBatch).filter(ImportBatch.id == batch_id).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch bulunamadı.")
+    total = batch.total_rows or 0
+    processed = batch.processed_rows or 0
+    if total > 0:
+        percentage = min(round(processed / total * 100), 100)
+    else:
+        percentage = 100 if batch.status == "completed" else 0
+    return BatchProgressResponse(
+        batch_id=batch_id,
+        status=batch.status,
+        total_rows=total,
+        processed_rows=processed,
+        percentage=percentage,
+        accepted_rows=batch.accepted_rows if batch.status == "completed" else None,
+        rejected_rows=batch.rejected_rows if batch.status == "completed" else None,
+    )
 
 
 @router.get("/batches/{batch_id}", response_model=ImportBatchResponse)
@@ -52,6 +75,7 @@ async def preview_import(
         encoding=result.encoding,
         file_hash=result.file_hash,
         duplicate_batch_id=existing.id if existing else None,
+        sample_rows=result.sample_rows,
         columns=[
             ColumnInfoSchema(
                 csv_name=col.csv_name,
@@ -64,15 +88,37 @@ async def preview_import(
 
 
 @router.post("/confirm", response_model=ImportBatchResponse)
-def confirm_import(
+async def confirm_import(
     request: ImportConfirmRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ) -> ImportBatchResponse:
     mapping = {item.csv_column: item.target_field for item in request.mapping}
 
-    try:
-        batch = import_csv(token=request.token, mapping=mapping, db=db)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    temp = get_temp_file(request.token)
+    if not temp:
+        raise HTTPException(status_code=400, detail="Geçersiz token veya oturum süresi dolmuş.")
 
+    _, filename, file_hash = temp
+
+    existing = db.query(ImportBatch).filter(ImportBatch.file_hash == file_hash).first()
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Bu dosya daha önce yüklendi (Batch ID: {existing.id}).",
+        )
+
+    batch = ImportBatch(
+        filename=filename,
+        total_rows=0,
+        accepted_rows=0,
+        rejected_rows=0,
+        status="processing",
+        file_hash=file_hash,
+    )
+    db.add(batch)
+    db.commit()
+    db.refresh(batch)
+
+    background_tasks.add_task(run_import_background, batch.id, request.token, mapping)
     return ImportBatchResponse.model_validate(batch)

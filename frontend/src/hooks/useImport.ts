@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { importApi } from '../services/api'
-import type { ColumnMappingItem, ImportBatch, PreviewResult } from '../types'
+import type { BatchStatus, ColumnMappingItem, ImportBatch, PreviewResult } from '../types'
 
 export type ImportStep = 'upload' | 'mapping' | 'progress' | 'summary'
 
@@ -14,6 +14,7 @@ export interface FileEntry {
   batchStatus: string | null    // 'processing' | 'completed' | 'failed'
   batchResult: ImportBatch | null
   error: string | null
+  progress: number              // 0-100, satır bazlı ilerleme yüzdesi
 }
 
 export function useImport() {
@@ -41,25 +42,39 @@ export function useImport() {
           (e) => e.batchId !== null && e.batchStatus === 'processing',
         )
         if (processing.length === 0) return prev
-        // Async poll — state immutable, yeni değerleri sonraki setEntries'te yazarız
+        // Progress endpoint'ini poll et — satır bazlı yüzde + durum
         processing.forEach(async (entry) => {
           if (!entry.batchId) return
           try {
-            const batch = await importApi.getBatch(entry.batchId)
-            if (batch.status !== 'processing') {
-              setEntries((cur) =>
-                cur.map((e) =>
-                  e.id === entry.id
-                    ? { ...e, batchStatus: batch.status, batchResult: batch }
-                    : e,
-                ),
-              )
-            }
+            const prog = await importApi.getBatchProgress(entry.batchId)
+            setEntries((cur) =>
+              cur.map((e) => {
+                if (e.id !== entry.id) return e
+                const isDone = prog.status === 'completed' || prog.status === 'failed'
+                return {
+                  ...e,
+                  progress: prog.percentage,
+                  batchStatus: prog.status,
+                  batchResult: isDone
+                    ? {
+                        id: prog.batch_id,
+                        filename: e.file.name,
+                        imported_at: '',
+                        total_rows: prog.total_rows,
+                        accepted_rows: prog.accepted_rows ?? 0,
+                        rejected_rows: prog.rejected_rows ?? 0,
+                        status: prog.status as BatchStatus,
+                        processed_rows: prog.processed_rows,
+                      }
+                    : e.batchResult,
+                }
+              }),
+            )
           } catch { /* network hataları sessizce geç */ }
         })
         return prev
       })
-    }, 1500)
+    }, 300)
 
     return stopPolling
   }, [step])
@@ -95,6 +110,7 @@ export function useImport() {
       batchStatus: null,
       batchResult: null,
       error: null,
+      progress: 0,
     }))
     setEntries(newEntries)
     setStep('mapping')

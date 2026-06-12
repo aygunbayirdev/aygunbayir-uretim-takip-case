@@ -1,14 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { submissionsApi } from '../services/api'
 
-export function useSubmissions() {
+export function useSubmissions(forcePolling = false) {
   return useQuery({
     queryKey: ['submissions'],
     queryFn: submissionsApi.list,
     refetchInterval: (query) => {
       const items = query.state.data?.items ?? []
       const hasProcessing = items.some((s) => s.status === 'processing' || s.status === 'pending')
-      return hasProcessing ? 3000 : false
+      return hasProcessing || forcePolling ? 3000 : false
     },
   })
 }

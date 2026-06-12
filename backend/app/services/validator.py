@@ -24,7 +24,7 @@ OPTIONAL_FIELDS: list[tuple[str, str]] = [
     ("is_merkezi_no", "İş Merkezi No"),
 ]
 
-_STATUS_PRIORITY = {"clean": 0, "pending": 0, "warning": 1, "rejected": 2}
+_STATUS_PRIORITY = {"pending": -1, "clean": 0, "warning": 1, "rejected": 2}
 
 
 @dataclass

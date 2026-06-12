@@ -74,3 +74,13 @@ def increment_retry(db: Session, submission: ApiSubmission) -> ApiSubmission:
     db.commit()
     db.refresh(submission)
     return submission
+
+
+def reset_to_pending(db: Session, submission: ApiSubmission) -> ApiSubmission:
+    submission.status = "processing"
+    submission.http_status = None
+    submission.response_body = None
+    submission.submitted_at = None
+    db.commit()
+    db.refresh(submission)
+    return submission

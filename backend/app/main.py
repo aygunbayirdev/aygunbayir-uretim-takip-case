@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from alembic import command
@@ -15,7 +16,9 @@ import app.models.api_submission     # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    alembic_cfg = Config("alembic.ini")
+    # Resolve alembic.ini relative to this file so CWD doesn't matter
+    alembic_ini = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
+    alembic_cfg = Config(os.path.abspath(alembic_ini))
     command.upgrade(alembic_cfg, "head")
     yield
 

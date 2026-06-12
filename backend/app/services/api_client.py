@@ -9,10 +9,12 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.production_record import ProductionRecord
 from app.repositories.production_repo import get_clean_unsent_records, mark_records_sent
+from app.database import SessionLocal
 from app.repositories.submission_repo import (
     create_pending,
     get_by_idempotency_key,
     increment_retry,
+    reset_to_pending,
     update_result,
 )
 
@@ -130,14 +132,21 @@ async def send_with_retry(payload: dict, idempotency_key: str) -> dict:
 # ---------------------------------------------------------------------------
 # Background task — tüm temiz kayıtları gönder
 # ---------------------------------------------------------------------------
-async def send_all_clean(submission_id: int, db: Session) -> None:
+async def send_all_clean(submission_id: int) -> None:
     """
     FastAPI BackgroundTasks ile çağrılır.
+    Kendi DB session'ını oluşturur — router'dan session geçirilmez.
     Temiz + gönderilmemiş kayıtları gün+vardiya bazında gruplar,
     her grup için ayrı API isteği atar.
     """
-    from app.repositories.submission_repo import get_submission_by_id
+    db = SessionLocal()
+    try:
+        await _do_send_all_clean(submission_id, db)
+    finally:
+        db.close()
 
+
+async def _do_send_all_clean(submission_id: int, db: Session) -> None:
     records = get_clean_unsent_records(db)
     if not records:
         _finalize(db, submission_id, http_status=0, response_body="Gönderilecek kayıt yok.", status="success")
@@ -156,14 +165,17 @@ async def send_all_clean(submission_id: int, db: Session) -> None:
         group_list = list(group)
         idempotency_key = f"{day.strftime('%Y-%m-%d')}_{shift}"
 
-        # Daha önce gönderilmişse atla
-        if get_by_idempotency_key(db, idempotency_key):
-            continue
+        existing = get_by_idempotency_key(db, idempotency_key)
+        if existing:
+            if existing.status == "success":
+                # Daha önce başarıyla gönderilmiş → atla
+                continue
+            # Başarısız deneme → kaydı sıfırla ve tekrar dene
+            sub = reset_to_pending(db, existing)
+        else:
+            sub = create_pending(db, submission_date=day, shift=shift or 0, idempotency_key=idempotency_key)
 
         payload = build_submission_payload(group_list)
-
-        # Her grup için ayrı submission kaydı oluştur
-        sub = create_pending(db, submission_date=day, shift=shift or 0, idempotency_key=idempotency_key)
 
         try:
             response = await send_with_retry(payload, idempotency_key)

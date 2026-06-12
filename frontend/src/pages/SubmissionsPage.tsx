@@ -1,17 +1,27 @@
 import { useState } from 'react'
-import { Send, RefreshCw, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { Send, RefreshCw, ChevronDown, ChevronUp, AlertCircle, CheckCircle } from 'lucide-react'
 import { useSubmissions, useSendSubmissions, useRetrySubmission } from '../hooks/useSubmissions'
 import StatusBadge from '../components/shared/StatusBadge'
 import type { ApiSubmission } from '../types'
 
 export default function SubmissionsPage() {
-  const { data, isLoading } = useSubmissions()
+  const [isPolling, setIsPolling] = useState(false)
+  const { data, isLoading } = useSubmissions(isPolling)
   const send = useSendSubmissions()
   const retry = useRetrySubmission()
   const [expanded, setExpanded] = useState<number | null>(null)
 
   const items = data?.items ?? []
   const hasProcessing = items.some((s) => s.status === 'processing' || s.status === 'pending')
+
+  const handleSend = () => {
+    send.mutate(undefined, {
+      onSuccess: () => {
+        setIsPolling(true)
+        setTimeout(() => setIsPolling(false), 10000)
+      },
+    })
+  }
 
   const toggleExpand = (id: number) => {
     setExpanded((prev) => (prev === id ? null : id))
@@ -27,8 +37,8 @@ export default function SubmissionsPage() {
           gün + vardiya bazında aggregate edilerek API'ye gönderilir.
         </p>
         <button
-          onClick={() => send.mutate()}
-          disabled={send.isPending || hasProcessing}
+          onClick={handleSend}
+          disabled={send.isPending || hasProcessing || isPolling}
           className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Send size={15} />
@@ -36,11 +46,19 @@ export default function SubmissionsPage() {
         </button>
       </div>
 
-      {/* Processing notice */}
-      {hasProcessing && (
+      {/* Processing / polling notice */}
+      {(hasProcessing || isPolling) && !send.isError && (
         <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700">
           <RefreshCw size={15} className="animate-spin shrink-0" />
-          Gönderim arka planda devam ediyor, durum otomatik güncelleniyor...
+          Gönderim arka planda işleniyor, tablo güncelleniyor...
+        </div>
+      )}
+
+      {/* Send success (not polling anymore) */}
+      {send.isSuccess && !isPolling && !send.isError && (
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
+          <CheckCircle size={15} className="shrink-0" />
+          Gönderim tamamlandı.
         </div>
       )}
 

@@ -78,11 +78,9 @@ def test_worst_status_warning_over_clean():
     assert worst_status("clean", "warning") == "warning"
 
 
-def test_worst_status_pending_same_priority_as_clean():
-    # pending and clean share priority 0 — both are acceptable returns
-    from app.services.validator import _STATUS_PRIORITY
-    result = worst_status("pending", "clean")
-    assert _STATUS_PRIORITY.get(result, 0) == 0
+def test_worst_status_pending_yields_to_clean():
+    # pending has lower priority than clean — validated record should become clean
+    assert worst_status("pending", "clean") == "clean"
 
 
 # ---------------------------------------------------------------------------

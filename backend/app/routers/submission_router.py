@@ -35,7 +35,7 @@ async def send_submissions(
         idempotency_key=f"batch_{date.today().isoformat()}_{id(background_tasks)}",
     )
 
-    background_tasks.add_task(send_all_clean, submission.id, db)
+    background_tasks.add_task(send_all_clean, submission.id)
 
     return SendSubmissionsResponse(submission_id=submission.id, status="processing")
 
@@ -70,6 +70,6 @@ async def retry_submission(
         raise HTTPException(status_code=400, detail="Sadece başarısız gönderimleri yeniden deneyebilirsiniz.")
 
     increment_retry(db, sub)
-    background_tasks.add_task(send_all_clean, sub.id, db)
+    background_tasks.add_task(send_all_clean, sub.id)
 
     return SendSubmissionsResponse(submission_id=sub.id, status="processing")

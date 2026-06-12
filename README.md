@@ -37,6 +37,7 @@ cd aygunbayir-uretim-takip-case
 cd backend
 cp .env.example .env          # API key'i .env dosyasına gir
 pip install -r requirements.txt
+alembic upgrade head          # DB migration uygula
 uvicorn app.main:app --reload --port 8000
 
 # Frontend (yeni terminal)
@@ -204,16 +205,14 @@ Gönderim arka planda (`BackgroundTasks`) çalışır; UI bloklanmaz. Her gönde
 
 ## Yapamadığım / Vakit Yetmeyen Kısımlar
 
-- **Alembic migration:** DB şeması `Base.metadata.create_all()` ile uygulama başında oluşturuluyor; migration geçmişi yok.
 - **Frontend testleri:** Backend unit testleri yazıldı (102 test); React component testleri (Vitest + Testing Library) zamanın yetmemesi nedeniyle eklenmedi.
 - **Docker production build:** Frontend `Dockerfile` dev server (`npm run dev`) çalıştırıyor; production için `nginx` + `npm run build` konfigürasyonu yapılmadı.
-- **Gerçek ekran görüntüleri:** README'deki screenshot placeholder'ları uygulama çalışırken alınmadı.
 
 ---
 
 ## Daha Fazla Zaman Olsaydı Neler Yapardım?
 
-- **Alembic migration:** Her schema değişikliğini versiyonlamak ve `upgrade/downgrade` desteği sağlamak için Alembic entegre ederdim.
+- **Alembic migration testi:** Migration'lar autogenerate ile oluşturuluyor; `downgrade` senaryoları ve çoklu ortam testleri yazılabilirdi.
 - **Validation re-validation:** ERROR kaydı düzeltildikten sonra backend otomatik olarak ilgili kuralı yeniden çalıştırmıyor; kullanıcı hatalı bir değer girerse issue manuel olarak tekrar açılması gerekiyor. `PATCH /api/records/{id}` endpoint'ine `re_validate=true` flag'i eklenerek bu otomatikleştirilebilirdi.
 - **Frontend testleri:** Vitest + React Testing Library ile kritik component'lar (ValidationPage, ImportPage) ve custom hook'lar test edilirdi.
 - **WebSocket ile live update:** Polling yerine WebSocket ile gönderim ve import durumunu anlık güncellemek daha iyi UX sağlardı.

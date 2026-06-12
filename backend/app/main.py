@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
 
+from alembic import command
+from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import create_tables
 from app.routers import import_router, records_router, validation_router, dashboard_router, submission_router
 
-# Base.metadata'ya kayıt için model import'ları
 import app.models.import_batch       # noqa: F401
 import app.models.production_record  # noqa: F401
 import app.models.validation_issue   # noqa: F401
@@ -15,7 +15,8 @@ import app.models.api_submission     # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_tables()
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
     yield
 
 

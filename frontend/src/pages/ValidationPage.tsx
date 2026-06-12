@@ -1,9 +1,48 @@
-import { useState } from 'react'
-import { Download, X, CheckCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Download, X, CheckCircle, Wrench } from 'lucide-react'
 import { useValidationIssues, useValidationSummary, useResolveIssue } from '../hooks/useValidation'
-import { validationApi } from '../services/api'
+import { usePatchRecord } from '../hooks/useRecords'
+import { validationApi, recordsApi } from '../services/api'
 import SeverityBadge from '../components/shared/SeverityBadge'
-import type { ValidationIssue } from '../types'
+import type { ValidationIssue, PatchRecordRequest } from '../types'
+
+// ---------------------------------------------------------------------------
+// Field config — alan adı → input tipi + Türkçe etiket
+// ---------------------------------------------------------------------------
+type FieldInputType = 'text' | 'float' | 'int' | 'date' | 'vardiya'
+
+const FIELD_CONFIG: Record<string, { type: FieldInputType; label: string }> = {
+  tarih:           { type: 'date',    label: 'Tarih' },
+  is_emri_no:      { type: 'text',    label: 'İş Emri No' },
+  is_merkezi_no:   { type: 'text',    label: 'İş Merkezi No' },
+  ismerkezi_adi:   { type: 'text',    label: 'İşmerkezi Adı' },
+  is_istasyon_adi: { type: 'text',    label: 'İstasyon Adı' },
+  stok_adi:        { type: 'text',    label: 'Stok Adı' },
+  vardiya:         { type: 'vardiya', label: 'Vardiya' },
+  availability:    { type: 'float',   label: 'Kullanılırlık (A%)' },
+  performance:     { type: 'float',   label: 'Performans (P%)' },
+  quality:         { type: 'float',   label: 'Kalite (Q%)' },
+  oee:             { type: 'float',   label: 'OEE' },
+  calisma_suresi:  { type: 'float',   label: 'Çalışma Süresi (dk)' },
+  durus_suresi:    { type: 'float',   label: 'Duruş Süresi (dk)' },
+  planli_durus:    { type: 'float',   label: 'Planlı Duruş (dk)' },
+  plansiz_durus:   { type: 'float',   label: 'Plansız Duruş (dk)' },
+  uretilen_miktar: { type: 'int',     label: 'Üretilen Miktar' },
+  hatali_miktar:   { type: 'int',     label: 'Hatalı Miktar' },
+}
+
+function parseFieldNames(fieldName: string | null): string[] {
+  if (!fieldName) return []
+  return fieldName.split(',').map((f) => f.trim()).filter((f) => f in FIELD_CONFIG)
+}
+
+function toTyped(field: string, raw: string): unknown {
+  const type = FIELD_CONFIG[field]?.type
+  if (type === 'int') return parseInt(raw, 10)
+  if (type === 'float') return parseFloat(raw)
+  return raw
+}
 
 // ---------------------------------------------------------------------------
 // Summary cards
@@ -13,11 +52,12 @@ function SummaryCards() {
   if (!data) return null
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <StatCard label="Toplam Issue"   value={data.total_issues}    color="text-gray-900" />
-      <StatCard label="Açık"           value={data.open_issues}     color="text-amber-600" />
-      <StatCard label="Hata (Error)"   value={data.error_count}     color="text-red-600" />
-      <StatCard label="Uyarı (Warning)" value={data.warning_count}  color="text-amber-500" />
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <StatCard label="Toplam Issue"    value={data.total_issues}     color="text-gray-900" />
+      <StatCard label="Açık"            value={data.open_issues}      color="text-amber-600" />
+      <StatCard label="Çözüldü"         value={data.resolved_issues}  color="text-green-600" />
+      <StatCard label="Hata (Error)"    value={data.error_count}      color="text-red-600" />
+      <StatCard label="Uyarı (Warning)" value={data.warning_count}    color="text-amber-500" />
     </div>
   )
 }
@@ -40,11 +80,40 @@ interface ResolveModalProps {
 }
 
 function ResolveModal({ issue, onClose }: ResolveModalProps) {
+  const isError = issue.severity === 'error'
+  const editableFields = parseFieldNames(issue.field_name)
+
   const [resolvedBy, setResolvedBy] = useState('')
   const [note, setNote] = useState('')
-  const resolve = useResolveIssue()
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
 
-  const handleSubmit = async () => {
+  const resolve = useResolveIssue()
+  const patch = usePatchRecord()
+  const queryClient = useQueryClient()
+
+  // Hata tipinde etkilenen kaydı çek
+  const { data: record, isLoading: recordLoading } = useQuery({
+    queryKey: ['record', issue.record_id],
+    queryFn: () => recordsApi.getById(issue.record_id),
+    enabled: isError,
+  })
+
+  // Kayıt yüklenince mevcut değerleri inputlara doldur
+  useEffect(() => {
+    if (!record || editableFields.length === 0) return
+    const initial: Record<string, string> = {}
+    editableFields.forEach((f) => {
+      const val = record[f as keyof typeof record]
+      initial[f] = val !== null && val !== undefined ? String(val) : ''
+    })
+    setFieldValues(initial)
+  }, [record]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const setField = (field: string, val: string) =>
+    setFieldValues((prev) => ({ ...prev, [field]: val }))
+
+  // WARNING → sadece issue'yu resolve et
+  const handleWarningSubmit = async () => {
     await resolve.mutateAsync({
       id: issue.id,
       body: { resolved: true, resolved_by: resolvedBy || undefined, correction_note: note || undefined },
@@ -52,30 +121,105 @@ function ResolveModal({ issue, onClose }: ResolveModalProps) {
     onClose()
   }
 
+  // ERROR → önce kaydı düzelt, sonra issue'yu resolve et
+  const handleErrorSubmit = async () => {
+    const patchBody: PatchRecordRequest = { correction_note: note || undefined }
+    editableFields.forEach((f) => {
+      const raw = fieldValues[f]
+      if (raw !== undefined && raw !== '') {
+        (patchBody as Record<string, unknown>)[f] = toTyped(f, raw)
+      }
+    })
+
+    await patch.mutateAsync({ id: issue.record_id, body: patchBody })
+    await resolve.mutateAsync({
+      id: issue.id,
+      body: { resolved: true, resolved_by: resolvedBy || undefined, correction_note: note || undefined },
+    })
+    queryClient.invalidateQueries({ queryKey: ['validation'] })
+    onClose()
+  }
+
+  const isPending = resolve.isPending || patch.isPending
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="font-semibold text-gray-900">Issue Çöz — #{issue.id}</h2>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-gray-900">
+              {isError ? 'Veriyi Düzelt' : 'Issue Onayla'} — #{issue.id}
+            </h2>
+            <SeverityBadge severity={issue.severity} />
+          </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
             <X size={18} />
           </button>
         </div>
 
-        <div className="px-6 py-4 space-y-4 text-sm">
+        {/* Body */}
+        <div className="px-6 py-4 space-y-4 text-sm overflow-y-auto">
           {/* Issue detayı */}
-          <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs bg-white border border-gray-200 px-2 py-0.5 rounded">
-                {issue.rule_code}
-              </span>
-              <SeverityBadge severity={issue.severity} />
-            </div>
+          <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
+            <span className="font-mono text-xs bg-white border border-gray-200 px-2 py-0.5 rounded">
+              {issue.rule_code}
+            </span>
             {issue.field_name && (
-              <p className="text-xs text-gray-500">Alan: <span className="font-medium text-gray-700">{issue.field_name}</span></p>
+              <p className="text-xs text-gray-500">
+                Alan: <span className="font-medium text-gray-700">{issue.field_name}</span>
+              </p>
             )}
-            <p className="text-gray-700">{issue.message}</p>
+            <p className="text-gray-700 text-xs leading-relaxed">{issue.message}</p>
           </div>
+
+          {/* ERROR: editable field inputları */}
+          {isError && (
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                <Wrench size={11} /> Değerleri Düzelt
+              </p>
+              {recordLoading ? (
+                <div className="text-xs text-gray-400 py-2">Kayıt yükleniyor...</div>
+              ) : editableFields.length === 0 ? (
+                <div className="text-xs text-gray-400 py-2">
+                  Bu kural için düzenlenecek alan bilgisi bulunamadı.
+                </div>
+              ) : (
+                editableFields.map((field) => {
+                  const cfg = FIELD_CONFIG[field]
+                  return (
+                    <div key={field}>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        {cfg.label}
+                      </label>
+                      {cfg.type === 'vardiya' ? (
+                        <select
+                          value={fieldValues[field] ?? ''}
+                          onChange={(e) => setField(field, e.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Seçin</option>
+                          <option value="1">1. Vardiya</option>
+                          <option value="2">2. Vardiya</option>
+                          <option value="3">3. Vardiya</option>
+                        </select>
+                      ) : (
+                        <input
+                          type={cfg.type === 'date' ? 'date' : 'number'}
+                          step={cfg.type === 'float' ? '0.01' : '1'}
+                          min={cfg.type === 'date' ? undefined : '0'}
+                          value={fieldValues[field] ?? ''}
+                          onChange={(e) => setField(field, e.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          )}
 
           {/* Çözen kişi */}
           <div>
@@ -91,10 +235,12 @@ function ResolveModal({ issue, onClose }: ResolveModalProps) {
 
           {/* Düzeltme notu */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Düzeltme / Açıklama</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              {isError ? 'Düzeltme Notu' : 'Açıklama / Onay Notu'}
+            </label>
             <textarea
               rows={3}
-              placeholder="Nasıl çözüldüğünü açıklayın..."
+              placeholder={isError ? 'Değeri neden düzelttinizi açıklayın...' : 'Nasıl çözüldüğünü açıklayın...'}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
@@ -102,7 +248,8 @@ function ResolveModal({ issue, onClose }: ResolveModalProps) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
+        {/* Footer */}
+        <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -110,12 +257,20 @@ function ResolveModal({ issue, onClose }: ResolveModalProps) {
             İptal
           </button>
           <button
-            onClick={handleSubmit}
-            disabled={resolve.isPending}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+            onClick={isError ? handleErrorSubmit : handleWarningSubmit}
+            disabled={isPending || (isError && recordLoading)}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50 transition-colors ${
+              isError
+                ? 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-green-600 hover:bg-green-700'
+            }`}
           >
-            <CheckCircle size={15} />
-            {resolve.isPending ? 'Kaydediliyor...' : 'Çözüldü Olarak İşaretle'}
+            {isError ? <Wrench size={15} /> : <CheckCircle size={15} />}
+            {isPending
+              ? 'Kaydediliyor...'
+              : isError
+              ? 'Düzelt ve Çöz'
+              : 'Onayla'}
           </button>
         </div>
       </div>
@@ -129,7 +284,7 @@ function ResolveModal({ issue, onClose }: ResolveModalProps) {
 const PAGE_SIZE = 50
 
 export default function ValidationPage() {
-  const [showResolved, setShowResolved] = useState(false)
+  const [resolvedFilter, setResolvedFilter] = useState<'open' | 'resolved' | 'all'>('open')
   const [filterSeverity, setFilterSeverity] = useState<'' | 'error' | 'warning'>('')
   const [filterRule, setFilterRule] = useState('')
   const [page, setPage] = useState(1)
@@ -137,8 +292,11 @@ export default function ValidationPage() {
 
   const resetPage = () => setPage(1)
 
+  const resolvedParam =
+    resolvedFilter === 'open' ? false : resolvedFilter === 'resolved' ? true : undefined
+
   const { data, isLoading } = useValidationIssues({
-    resolved: showResolved ? undefined : false,
+    resolved: resolvedParam,
     severity: filterSeverity || undefined,
     rule_code: filterRule || undefined,
     page,
@@ -153,7 +311,6 @@ export default function ValidationPage() {
 
   return (
     <div className="space-y-4">
-      {/* Özet kartlar */}
       <SummaryCards />
 
       {/* Toolbar */}
@@ -176,15 +333,15 @@ export default function ValidationPage() {
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-44 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showResolved}
-            onChange={(e) => { setShowResolved(e.target.checked); resetPage() }}
-            className="rounded"
-          />
-          Çözülmüşleri göster
-        </label>
+        <select
+          value={resolvedFilter}
+          onChange={(e) => { setResolvedFilter(e.target.value as 'open' | 'resolved' | 'all'); resetPage() }}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="open">Açık</option>
+          <option value="resolved">Çözüldü</option>
+          <option value="all">Tümü</option>
+        </select>
 
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-gray-500">{total.toLocaleString('tr-TR')} issue</span>
@@ -247,9 +404,13 @@ export default function ValidationPage() {
                       {!issue.resolved && (
                         <button
                           onClick={() => setSelected(issue)}
-                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                          className={`text-xs font-medium hover:underline ${
+                            issue.severity === 'error'
+                              ? 'text-blue-600 hover:text-blue-800'
+                              : 'text-green-600 hover:text-green-800'
+                          }`}
                         >
-                          Çöz
+                          {issue.severity === 'error' ? 'Düzelt' : 'Onayla'}
                         </button>
                       )}
                     </td>
@@ -260,7 +421,6 @@ export default function ValidationPage() {
           </table>
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
             <span className="text-xs text-gray-500">
@@ -274,9 +434,7 @@ export default function ValidationPage() {
               >
                 ← Önceki
               </button>
-              <span className="px-3 py-1.5 text-xs text-gray-600">
-                {page} / {totalPages}
-              </span>
+              <span className="px-3 py-1.5 text-xs text-gray-600">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}

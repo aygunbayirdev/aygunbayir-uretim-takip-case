@@ -63,7 +63,7 @@ npm run dev
 
 ### Validasyon Raporu
 
-> Hata tipi filtreleme, issue çözme (audit trail) ve Excel export.
+> Hata tipi filtreleme, severity'e göre iki farklı çözüm akışı ve Excel export.
 
 ![Validation](ai_usage/screenshots/validation.png)
 
@@ -72,6 +72,41 @@ npm run dev
 > Gönderim geçmişi, HTTP durum kodu, yanıt detayı ve retry butonu.
 
 ![Submissions](ai_usage/screenshots/submissions.png)
+
+---
+
+## Validasyon Çözüm Akışı
+
+Validation issues iki farklı akışla çözülür — severity'e göre otomatik ayrılır:
+
+### ERROR → Veriyi Düzelt ve Çöz
+
+Fiziksel olarak imkânsız veya eksik veri içeren kayıtlar için kullanılır. Tabloda bu kayıtların butonu **"Düzelt"** olarak görünür.
+
+1. "Düzelt" butonuna tıkla
+2. Modal açılır; sorunlu alan(lar) mevcut değerleriyle editable input olarak gelir
+   - `hatali_miktar`, `uretilen_miktar` → sayı inputu (tamsayı)
+   - `performance`, `quality`, `availability` → sayı inputu (ondalıklı)
+   - `tarih` → tarih seçici
+   - `vardiya` → dropdown (1/2/3)
+   - `is_emri_no`, `is_istasyon_adi` vb. → metin inputu
+3. Değeri düzelt, düzeltme notu gir
+4. "Düzelt ve Çöz" → `PATCH /api/records/{id}` + `PATCH /api/validation/issues/{id}`
+
+Örnek kullanım senaryoları:
+- **VC-01** (`hatali > üretilen`): hatalı miktar düzeltilir
+- **VG-01** (zorunlu alan boş): eksik alan doldurulur
+- **VC-03** (negatif miktar): doğru değer girilir
+
+### WARNING → İncele ve Onayla
+
+Veri şüpheli ama gerçek olabilecek kayıtlar için kullanılır (kalibrasyon kaynaklı P>100, MES formül sapması vb.). Tabloda **"Onayla"** butonu görünür.
+
+1. "Onayla" butonuna tıkla
+2. İsteğe bağlı: Çözen Kişi + Onay notu gir
+3. "Onayla" → `PATCH /api/validation/issues/{id}` (issue resolved=true)
+
+Veri değişmez; insan kararıyla kabul edildiği kayıt altına alınır (audit trail).
 
 ---
 
@@ -169,7 +204,6 @@ Gönderim arka planda (`BackgroundTasks`) çalışır; UI bloklanmaz. Her gönde
 
 ## Yapamadığım / Vakit Yetmeyen Kısımlar
 
-- **Import progress polling:** `GET /api/import/batches/{id}/progress` endpoint'i backend'de mevcut değil; `ImportProgress.tsx` component'i placeholder olarak kaldı.
 - **Alembic migration:** DB şeması `Base.metadata.create_all()` ile uygulama başında oluşturuluyor; migration geçmişi yok.
 - **Frontend testleri:** Backend unit testleri yazıldı (102 test); React component testleri (Vitest + Testing Library) zamanın yetmemesi nedeniyle eklenmedi.
 - **Docker production build:** Frontend `Dockerfile` dev server (`npm run dev`) çalıştırıyor; production için `nginx` + `npm run build` konfigürasyonu yapılmadı.
@@ -180,7 +214,7 @@ Gönderim arka planda (`BackgroundTasks`) çalışır; UI bloklanmaz. Her gönde
 ## Daha Fazla Zaman Olsaydı Neler Yapardım?
 
 - **Alembic migration:** Her schema değişikliğini versiyonlamak ve `upgrade/downgrade` desteği sağlamak için Alembic entegre ederdim.
-- **Import progress polling:** Büyük CSV'lerin chunk'lı import sürecinde kullanıcıya ilerleme çubuğu göstermek için `GET /api/import/batches/{id}/progress` endpoint'i ve `ImportProgress.tsx` component'ini tamamlardım.
+- **Validation re-validation:** ERROR kaydı düzeltildikten sonra backend otomatik olarak ilgili kuralı yeniden çalıştırmıyor; kullanıcı hatalı bir değer girerse issue manuel olarak tekrar açılması gerekiyor. `PATCH /api/records/{id}` endpoint'ine `re_validate=true` flag'i eklenerek bu otomatikleştirilebilirdi.
 - **Frontend testleri:** Vitest + React Testing Library ile kritik component'lar (ValidationPage, ImportPage) ve custom hook'lar test edilirdi.
 - **WebSocket ile live update:** Polling yerine WebSocket ile gönderim ve import durumunu anlık güncellemek daha iyi UX sağlardı.
 - **Role-based access:** Operatör / supervisor ayrımı — supervisor olmadan validation issue'ları resolve edilememesi gibi iş kuralları eklenebilirdi.

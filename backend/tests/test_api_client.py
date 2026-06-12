@@ -113,6 +113,18 @@ def test_payload_oe_value_all_none_oee_is_zero():
     assert payload["oe_value"] == 0.0
 
 
+def test_payload_oe_value_capped_at_100():
+    records = [make_production_record(oee=115.0)]
+    payload = build_submission_payload(records)
+    assert payload["oe_value"] == 100.0
+
+
+def test_payload_machine_count_minimum_1_when_all_stations_none():
+    records = [make_production_record(is_istasyon_adi=None)]
+    payload = build_submission_payload(records)
+    assert payload["machine_count"] == 1
+
+
 def test_payload_none_uretilen_treated_as_zero():
     records = [
         make_production_record(uretilen_miktar=None),
@@ -129,14 +141,40 @@ def test_payload_none_uretilen_treated_as_zero():
 @pytest.mark.asyncio
 async def test_send_success_returns_json(monkeypatch):
     async def mock_post(self_client, url, **kwargs):
-        return httpx.Response(200, json={"result": "ok"})
+        return httpx.Response(200, json={"success": True, "result": "ok"})
 
     monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
 
     result = await send_with_retry({"shift": 1}, "2024-01-15_1")
-    assert result == {"result": "ok"}
+    assert result == {"success": True, "result": "ok"}
     assert api_client._circuit_state == "CLOSED"
     assert api_client._circuit_failures == 0
+
+
+@pytest.mark.asyncio
+async def test_send_success_false_raises(monkeypatch):
+    async def mock_post(self_client, url, **kwargs):
+        return httpx.Response(200, json={"success": False, "message": "rejected"})
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+
+    with pytest.raises(ValueError, match="success=false"):
+        await send_with_retry({"shift": 1}, "key")
+
+
+@pytest.mark.asyncio
+async def test_send_no_idempotency_key_in_headers(monkeypatch):
+    captured_headers = {}
+
+    async def mock_post(self_client, url, **kwargs):
+        captured_headers.update(kwargs.get("headers", {}))
+        return httpx.Response(200, json={"success": True})
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", mock_post)
+    await send_with_retry({"shift": 1}, "key")
+
+    assert "X-Idempotency-Key" not in captured_headers
+    assert "X-Production-Key" in captured_headers
 
 
 # ---------------------------------------------------------------------------

@@ -68,9 +68,12 @@ def _circuit_failure() -> None:
 # ---------------------------------------------------------------------------
 def build_submission_payload(records: list[ProductionRecord]) -> dict:
     oee_values = [r.oee for r in records if r.oee is not None]
+    raw_oe = round(mean(oee_values), 2) if oee_values else 0.0
     return {
-        "oe_value": round(mean(oee_values), 2) if oee_values else 0.0,
-        "machine_count": len({r.is_istasyon_adi for r in records if r.is_istasyon_adi}),
+        "oe_value": min(raw_oe, 100.0),           # API range: 0.0–100.0
+        "machine_count": max(                      # API range: 1–1000
+            len({r.is_istasyon_adi for r in records if r.is_istasyon_adi}), 1
+        ),
         "shift": records[0].vardiya,
         "total_production_units": sum(r.uretilen_miktar or 0 for r in records),
         "production_date": records[0].tarih.strftime("%Y-%m-%d"),
@@ -95,15 +98,15 @@ async def send_with_retry(payload: dict, idempotency_key: str) -> dict:
                 resp = await client.post(
                     url=settings.API_ENDPOINT,
                     json=payload,
-                    headers={
-                        "X-Production-Key": settings.API_KEY,
-                        "X-Idempotency-Key": idempotency_key,
-                    },
+                    headers={"X-Production-Key": settings.API_KEY},
                 )
 
             if resp.status_code == 200:
+                body = resp.json()
+                if not body.get("success", True):
+                    raise ValueError(f"API success=false: {resp.text}")
                 _circuit_success()
-                return resp.json()
+                return body
 
             if resp.status_code == 429:
                 await asyncio.sleep(60)
@@ -176,6 +179,10 @@ async def _do_send_all_clean(submission_id: int, db: Session) -> None:
             sub = create_pending(db, submission_date=day, shift=shift or 0, idempotency_key=idempotency_key)
 
         payload = build_submission_payload(group_list)
+
+        # API requires total_production_units >= 1 — skip zero-production groups
+        if payload["total_production_units"] < 1:
+            continue
 
         try:
             response = await send_with_retry(payload, idempotency_key)

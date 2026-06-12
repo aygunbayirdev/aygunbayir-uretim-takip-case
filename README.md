@@ -15,12 +15,13 @@ Gerçek bir CSV dataseti analiz edilerek **2117 kayıtın %51.6'sının** en az 
 
 ## Hızlı Kurulum
 
-### Docker ile (önerilen — 2 komut)
+### Docker ile (önerilen — 3 komut)
 
 ```bash
-git clone https://github.com/aygunbyr/aygunbayir-uretim-takip-case.git
+git clone https://github.com/aygunbayirdev/aygunbayir-uretim-takip-case.git
 cd aygunbayir-uretim-takip-case
-docker-compose up --build
+cp backend/.env.example backend/.env   # API_KEY ve API_ENDPOINT'i doldur
+docker compose up --build
 ```
 
 - Backend: http://localhost:8000
@@ -30,7 +31,7 @@ docker-compose up --build
 ### Manuel kurulum
 
 ```bash
-git clone https://github.com/aygunbyr/aygunbayir-uretim-takip-case.git
+git clone https://github.com/aygunbayirdev/aygunbayir-uretim-takip-case.git
 cd aygunbayir-uretim-takip-case
 
 # Backend
@@ -157,7 +158,7 @@ Payload oluştur:
   production_date       = YYYY-MM-DD
     ↓
 POST /api/v1/submit
-  Headers: X-Production-Key, X-Idempotency-Key
+  Headers: X-Production-Key
     ↓
 Retry (max 3, backoff: 1s → 5s → 30s)
   429 → 60s bekle
@@ -206,6 +207,7 @@ Gönderim arka planda (`BackgroundTasks`) çalışır; UI bloklanmaz. Her gönde
 ## Yapamadığım / Vakit Yetmeyen Kısımlar
 
 - **Docker production build:** Frontend `Dockerfile` dev server (`npm run dev`) çalıştırıyor; production için `nginx` + `npm run build` konfigürasyonu yapılmadı.
+- **Persistent circuit breaker state:** Circuit breaker in-memory tutulduğu için backend yeniden başlatılınca sıfırlanıyor; kalıcı durum için Redis veya DB tabanlı bir çözüm gerekir.
 
 ---
 
@@ -213,7 +215,7 @@ Gönderim arka planda (`BackgroundTasks`) çalışır; UI bloklanmaz. Her gönde
 
 - **Alembic migration testi:** Migration'lar autogenerate ile oluşturuluyor; `downgrade` senaryoları ve çoklu ortam testleri yazılabilirdi.
 - **Validation re-validation:** ERROR kaydı düzeltildikten sonra backend otomatik olarak ilgili kuralı yeniden çalıştırmıyor; kullanıcı hatalı bir değer girerse issue manuel olarak tekrar açılması gerekiyor. `PATCH /api/records/{id}` endpoint'ine `re_validate=true` flag'i eklenerek bu otomatikleştirilebilirdi.
-- **Frontend testleri:** Vitest + React Testing Library ile kritik component'lar (ValidationPage, ImportPage) ve custom hook'lar test edilirdi.
+- **Frontend entegrasyon testleri:** Vitest + MSW ile kritik page-level senaryolar (ValidationPage, ImportPage) uçtan uca test edilirdi; şu an birim testler mevcut (46 test) ama sayfa akışları kapsanmıyor.
 - **WebSocket ile live update:** Polling yerine WebSocket ile gönderim ve import durumunu anlık güncellemek daha iyi UX sağlardı.
 - **Role-based access:** Operatör / supervisor ayrımı — supervisor olmadan validation issue'ları resolve edilememesi gibi iş kuralları eklenebilirdi.
 - **CSV template export:** Kullanıcının boş bir CSV şablonu indirip doldurabilmesi, import hatalarını peşinen azaltırdı.

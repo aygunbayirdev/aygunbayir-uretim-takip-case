@@ -12,7 +12,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 - [x] `frontend/package.json` bağımlılıklarını tanımla
 - [x] `frontend/vite.config.ts` ve `tsconfig.json` yapılandır
 - [x] `.gitignore` oluştur (`.env`, `__pycache__`, `node_modules`, `*.db`)
-- [x] `docker-compose.yml` — backend + frontend servisleri
+- [x] `docker-compose.yml` — backend + frontend servisleri; `env_file: ./backend/.env` ile API_KEY container'a doğru iletiliyor
 
 ---
 
@@ -109,6 +109,10 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 ## 9. FastAPI App
 
 - [x] `main.py` — lifespan, CORS (5173 + 4173), router mount'ları, /health endpoint
+- [x] `main.py` — alembic.ini path `__file__` ile resolve edildi; sunucu CWD'sinden bağımsız migration
+- [x] `config.py` — `API_ENDPOINT` hardcode'dan kaldırıldı; `.env` dosyasından okunuyor (zorunlu alan)
+- [x] `.env.example` — IP adresi placeholder ile değiştirildi, İngilizce açıklama eklendi
+- [x] `conftest.py` — test ortamı için dummy `API_ENDPOINT` env var; `.env` olmadan testler çalışıyor
 
 ---
 
@@ -136,12 +140,18 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
   - [x] Idempotency key: `"{production_date}_{shift}"`
   - [x] Circuit breaker: 5 ardışık hata → OPEN, 60 sn sonra HALF-OPEN
   - [x] Kısmi başarı durumunda response_body hem gönderilen grup sayısını hem hatayı içerir
-- [x] `repositories/submission_repo.py` — create_pending, update_result, increment_retry; coordinator records (shift=0) excluded from listing
+  - [x] `send_all_clean` kendi `SessionLocal()` oluşturuyor — router'ın generator session'ı background task'a geçirilmiyor
+  - [x] Idempotency check sadece `status='success'` kayıtları atlıyor; başarısız kayıtlar `reset_to_pending` ile sıfırlanıp tekrar deneniyor
+  - [x] **API uyum:** `oe_value` max 100.0'a cap'lendi; `machine_count` min 1; `total_production_units < 1` olan gruplar atlanıyor
+  - [x] **API uyum:** HTTP 200 sonrası `success` alanı kontrol ediliyor; `success=false` → ValueError
+  - [x] **API uyum:** `X-Idempotency-Key` header'ı kaldırıldı (API spec'te yok)
+- [x] `repositories/submission_repo.py` — create_pending, update_result, increment_retry, reset_to_pending; coordinator records (shift=0) listed only
 - [x] `routers/submission_router.py`
   - [x] `POST /api/submissions/send` — BackgroundTasks ile async gönderim
   - [x] `GET /api/submissions` — gönderim geçmişi
   - [x] `GET /api/submissions/{id}` — tek gönderim detayı
   - [x] `POST /api/submissions/{id}/retry` — başarısız gönderimi tekrar dene
+- [x] **Kritik bug fix:** `_STATUS_PRIORITY` — `pending` önceliği -1'e düşürüldü; `worst_status("pending", "clean") = "clean"` artık doğru çalışıyor (önceki hata: tüm kayıtlar import sonrası `pending` kalıyordu, hiç `clean` üretilmiyordu)
 
 ---
 
@@ -202,7 +212,11 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 - [x] `pages/SubmissionsPage.tsx`
 - [x] Gönderim geçmişi tablosu (tarih, vardiya, OEE, durum)
 - [x] Retry butonu (başarısız gönderimler için)
-- [x] `hooks/useSubmissions.ts`
+- [x] `hooks/useSubmissions.ts` — `forcePolling` parametresi ile gönderim sonrası 10 sn polling
+- [x] "Gönder" butonuna tıklandığında: mavi "işleniyor" banner (polling süresince) + yeşil "tamamlandı" banner (sonrası)
+- [x] **Tablo yeniden tasarım:** coordinator kayıtları (shift=0) listeleniyor — her "Gönder" tıklaması = 1 satır; OEE/makine/üretim sütunları kaldırıldı, yanıt özeti sütunu eklendi
+- [x] **Bağlamsal geri bildirim:** `submission_id` kaydedilip polling sonrası coordinator'ın `response_body`/`status`'una göre banner: yeşil (X grup gönderildi) / amber (kayıt yok) / kırmızı (hata)
+- [x] **`submission_repo.py`:** `get_submissions` filtresi `shift != 0` → `shift == 0` olarak güncellendi
 
 ---
 
@@ -211,6 +225,13 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 - [x] `tests/test_validator.py` — tüm validation kuralları için unit testler (pytest) — 66 test
 - [x] `tests/test_import_service.py` — duplicate check, _safe_int, _safe_float, _business_key — 21 test
 - [x] `tests/test_api_client.py` — retry mantığı, circuit breaker, 413 handling, payload builder — 18 test
+- [x] Frontend testleri (vitest + @testing-library/react + msw) — 46 test
+  - [x] `buildRecordParams` — array serialization, shift multi-select, edge cases (8 test)
+  - [x] `StatusBadge` — tüm status label'ları + unknown fallback (9 test)
+  - [x] `formatTick` — günlük/haftalık/aylık tarih formatlama, 12 TR ay kısaltması (9 test)
+  - [x] `FilterBar` — debounce, shift toggle/deselect/multi, OEE aralık, reset (14 test)
+  - [x] `useRecords` — success/empty/error state (3 test)
+  - [x] `useValidation` — summary counts + issue listesi (3 test)
 
 ---
 

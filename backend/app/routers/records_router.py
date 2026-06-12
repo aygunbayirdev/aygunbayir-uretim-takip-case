@@ -35,7 +35,7 @@ EXPORT_FIELDS = [
 def list_records(
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
-    shift: int | None = Query(None),
+    shift: list[int] | None = Query(None),
     station: str | None = Query(None),
     product: str | None = Query(None),
     oee_min: float | None = Query(None),
@@ -72,7 +72,7 @@ def list_records(
 def export_records(
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
-    shift: int | None = Query(None),
+    shift: list[int] | None = Query(None),
     station: str | None = Query(None),
     product: str | None = Query(None),
     oee_min: float | None = Query(None),

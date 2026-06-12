@@ -67,9 +67,22 @@ export const importApi = {
 // Records
 // ---------------------------------------------------------------------------
 
+function buildRecordParams(filters: RecordFilters): URLSearchParams {
+  const params = new URLSearchParams()
+  Object.entries(filters).forEach(([k, v]) => {
+    if (v === undefined || v === null || v === '') return
+    if (Array.isArray(v)) {
+      v.forEach((item) => params.append(k, String(item)))
+    } else {
+      params.append(k, String(v))
+    }
+  })
+  return params
+}
+
 export const recordsApi = {
   list: async (filters: RecordFilters = {}): Promise<RecordsPage> => {
-    const { data } = await api.get<RecordsPage>('/records', { params: filters })
+    const { data } = await api.get<RecordsPage>('/records', { params: buildRecordParams(filters) })
     return data
   },
 
@@ -84,11 +97,7 @@ export const recordsApi = {
   },
 
   exportUrl: (filters: RecordFilters = {}): string => {
-    const params = new URLSearchParams()
-    Object.entries(filters).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== '') params.append(k, String(v))
-    })
-    const qs = params.toString()
+    const qs = buildRecordParams(filters).toString()
     return `/api/records/export${qs ? `?${qs}` : ''}`
   },
 }

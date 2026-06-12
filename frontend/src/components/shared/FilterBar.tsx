@@ -15,12 +15,7 @@ const STATUS_OPTIONS: { value: ValidationStatus | ''; label: string }[] = [
   { value: 'pending',  label: 'Bekliyor' },
 ]
 
-const SHIFT_OPTIONS = [
-  { value: '',  label: 'Tüm Vardiyalar' },
-  { value: '1', label: '1. Vardiya' },
-  { value: '2', label: '2. Vardiya' },
-  { value: '3', label: '3. Vardiya' },
-]
+const SHIFTS = [1, 2, 3]
 
 export default function FilterBar({ filters, onChange }: Props) {
   const [local, setLocal] = useState(filters)
@@ -34,6 +29,12 @@ export default function FilterBar({ filters, onChange }: Props) {
   const set = (patch: Partial<RecordFilters>) =>
     setLocal((prev) => ({ ...prev, ...patch, page: 1 }))
 
+  const toggleShift = (s: number) => {
+    const current = local.shift ?? []
+    const next = current.includes(s) ? current.filter((v) => v !== s) : [...current, s]
+    set({ shift: next.length > 0 ? next : undefined })
+  }
+
   const reset = () => {
     const empty: RecordFilters = { page: 1, page_size: filters.page_size }
     setLocal(empty)
@@ -41,7 +42,11 @@ export default function FilterBar({ filters, onChange }: Props) {
   }
 
   const hasFilters = Object.entries(local).some(
-    ([k, v]) => !['page', 'page_size'].includes(k) && v !== undefined && v !== '' && v !== false
+    ([k, v]) => {
+      if (['page', 'page_size'].includes(k)) return false
+      if (Array.isArray(v)) return v.length > 0
+      return v !== undefined && v !== '' && v !== false
+    }
   )
 
   return (
@@ -67,18 +72,27 @@ export default function FilterBar({ filters, onChange }: Props) {
           />
         </div>
 
-        {/* Vardiya */}
+        {/* Vardiya — çoklu seçim */}
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-500">Vardiya</label>
-          <select
-            value={local.shift ?? ''}
-            onChange={(e) => set({ shift: e.target.value ? Number(e.target.value) : undefined })}
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {SHIFT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+          <div className="flex gap-1">
+            {SHIFTS.map((s) => {
+              const active = (local.shift ?? []).includes(s)
+              return (
+                <button
+                  key={s}
+                  onClick={() => toggleShift(s)}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                    active
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {s}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Durum */}
@@ -105,7 +119,48 @@ export default function FilterBar({ filters, onChange }: Props) {
               placeholder="İstasyon ara..."
               value={local.station ?? ''}
               onChange={(e) => set({ station: e.target.value || undefined })}
-              className="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Ürün / Stok Adı */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-500">Ürün</label>
+          <div className="relative">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Ürün ara..."
+              value={local.product ?? ''}
+              onChange={(e) => set({ product: e.target.value || undefined })}
+              className="border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* OEE aralığı */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-500">OEE (%)</label>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              placeholder="Min"
+              min={0}
+              max={100}
+              value={local.oee_min ?? ''}
+              onChange={(e) => set({ oee_min: e.target.value ? Number(e.target.value) : undefined })}
+              className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-gray-400 text-xs">–</span>
+            <input
+              type="number"
+              placeholder="Max"
+              min={0}
+              max={100}
+              value={local.oee_max ?? ''}
+              onChange={(e) => set({ oee_max: e.target.value ? Number(e.target.value) : undefined })}
+              className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>

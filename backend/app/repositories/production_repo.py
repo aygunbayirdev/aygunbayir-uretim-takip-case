@@ -12,7 +12,7 @@ from app.models.validation_issue import ValidationIssue
 class RecordFilters:
     date_from: date | None = None
     date_to: date | None = None
-    shift: int | None = None
+    shift: list[int] | None = None
     station: str | None = None
     product: str | None = None
     oee_min: float | None = None
@@ -28,8 +28,8 @@ def _apply_filters(query, filters: RecordFilters):
         query = query.filter(ProductionRecord.tarih >= filters.date_from)
     if filters.date_to:
         query = query.filter(ProductionRecord.tarih <= filters.date_to)
-    if filters.shift is not None:
-        query = query.filter(ProductionRecord.vardiya == filters.shift)
+    if filters.shift:
+        query = query.filter(ProductionRecord.vardiya.in_(filters.shift))
     if filters.station:
         query = query.filter(ProductionRecord.is_istasyon_adi.ilike(f"%{filters.station}%"))
     if filters.product:

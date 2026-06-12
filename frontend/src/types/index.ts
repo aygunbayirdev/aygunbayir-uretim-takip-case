@@ -119,7 +119,7 @@ export interface RecordsPage {
 export interface RecordFilters {
   date_from?: string
   date_to?: string
-  shift?: number
+  shift?: number[]
   station?: string
   product?: string
   oee_min?: number

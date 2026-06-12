@@ -131,11 +131,12 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
   - [x] `build_submission_payload()` — gün+vardiya bazında aggregate
   - [x] `send_with_retry()` — 3 deneme, exponential backoff (1/5/30 sn)
   - [x] 429 (rate limit) → 60 sn bekle
-  - [x] 413 (payload too large) → retry yok, hata fırlat
+  - [x] 413 (payload too large) → retry yok, hata fırlat (circuit breaker tetiklemez)
   - [x] 401/422 → non-retryable, hata fırlat
   - [x] Idempotency key: `"{production_date}_{shift}"`
   - [x] Circuit breaker: 5 ardışık hata → OPEN, 60 sn sonra HALF-OPEN
-- [x] `repositories/submission_repo.py` — create_pending, update_result, increment_retry
+  - [x] Kısmi başarı durumunda response_body hem gönderilen grup sayısını hem hatayı içerir
+- [x] `repositories/submission_repo.py` — create_pending, update_result, increment_retry; coordinator records (shift=0) excluded from listing
 - [x] `routers/submission_router.py`
   - [x] `POST /api/submissions/send` — BackgroundTasks ile async gönderim
   - [x] `GET /api/submissions` — gönderim geçmişi
@@ -183,7 +184,7 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 ## 15. Frontend — Records Sayfası
 
 - [x] `pages/RecordsPage.tsx` — filtreli tablo, CSV export, düzeltme modalı (audit trail)
-- [x] `components/shared/FilterBar.tsx` — 300ms debounce, tarih/vardiya/durum/istasyon/issues_only
+- [x] `components/shared/FilterBar.tsx` — 300ms debounce, tarih/vardiya(çoklu)/durum/istasyon/ürün/OEE aralık/issues_only
 - [x] `components/shared/DataTable.tsx` — genel amaçlı, sayfalama dahil
 - [x] `hooks/useRecords.ts` — useRecords (React Query), usePatchRecord (mutation)
 

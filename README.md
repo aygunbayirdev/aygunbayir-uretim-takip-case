@@ -1,7 +1,7 @@
 # aygunbayir-uretim-takip-case
 
 Magna Automotive injection molding hattı için OEE (Overall Equipment Effectiveness) takip uygulaması.  
-MES sisteminden gelen CSV verisi import edilir, 15 kural ile validate edilir, dashboard'da görselleştirilir ve REST API'ye gönderilir.
+MES sisteminden gelen CSV verisi import edilir, 19 farklı kural (17 iş/içerik kuralı, 2 duplicate/import kuralı) ile validate edilir, dashboard'da görselleştirilir ve REST API'ye gönderilir.
 
 ---
 
@@ -9,7 +9,7 @@ MES sisteminden gelen CSV verisi import edilir, 15 kural ile validate edilir, da
 
 Üretim hatlarından gelen ham MES verisindeki kalite sorunlarını otomatik olarak tespit etmek, operatörlere anlamlı bir validation raporu sunmak ve temiz kayıtları hedef sisteme güvenli biçimde iletmektir.
 
-Gerçek bir CSV dataseti analiz edilerek **2117 kayıtın %51.6'sının** en az bir veri kalitesi sorunu içerdiği tespit edilmiş; bu sorunlara özgü 15 validation kuralı implement edilmiştir.
+Gerçek bir CSV dataseti analiz edilerek 2117 kayıtın %51.6'sının en az bir veri kalitesi sorunu içerdiği tespit edilmiş; veri bütünlüğünü sağlamak adına 2 farklı katmanda toplam 19 validation kuralı (Import aşamasında 2 duplicate kuralı, Validator servisinde 17 iş kuralı) implement edilmiştir.
 
 ---
 
@@ -125,6 +125,7 @@ Datasette karşılaşılan başlıca sorunlar ve etkilenen kayıt sayıları:
 | **VP-01a** | Performance > 100, süre < 5 dk — vardiya geçiş artefaktı | 144 | **ERROR** |
 | **VG-02** | Opsiyonel alan eksik (stok_adi, is_merkezi_no) | 124 | WARNING |
 | **VG-01** | Zorunlu alan boş (is_emri_no, vardiya, is_istasyon_adi) | 21 | **ERROR** |
+| **VC-02** | Quality formül tutarsızlığı (> %1 sapma) | 16 | WARNING |
 | **VL-02** | Çalışma süresi = 0 ama üretim > 0 | 11 | **ERROR** |
 | **VL-01** | Availability = 0 ama üretim > 0 | 9 | **ERROR** |
 | **VD-02** | Duruş toplamı tutarsızlığı (±0.5 dk tolerans dışı) | 8 | WARNING |
@@ -132,7 +133,10 @@ Datasette karşılaşılan başlıca sorunlar ve etkilenen kayıt sayıları:
 | **VQ-01** | Quality aralık dışı (< 0 veya > 100) | 5 | **ERROR** |
 | **VC-03** | Negatif miktar (üretilen veya hatalı) | 5 | **ERROR** |
 | **VD-01** | Negatif çalışma süresi | 3 | **ERROR** |
-| **VC-02** | Quality formül tutarsızlığı (> %1 sapma) | 16 | WARNING |
+| **VV-01** | Vardiya değeri geçersiz (1, 2, 3 dışı) | - | **ERROR** |
+| **VF-01** | İş emri no format dışı (302XXXXXXX bekleniyor) | - | WARNING |
+| **VD-04** | Dosya içi mükerrer (duplicate) kayıt tespiti | - | **ERROR** |
+| **VD-05** | Çapraz-batch mükerrer (önceden yüklenmiş) kayıt tespiti | - | WARNING |
 
 **Dikkat çekici bulgular:**
 - **VP-01a (artefakt):** Vardiya başı/sonu geçişinde makine çok kısa çalışıp 1-2 parça üretiyor; `Performance = gerçek_hız / ideal_hız` formülünde bölen (süre) çok küçük olduğu için değer 300+ çıkabiliyor. Bu kayıtlar reddedilir.

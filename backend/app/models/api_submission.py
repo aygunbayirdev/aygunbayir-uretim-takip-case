@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from sqlalchemy import Integer, Text, Float, Date, Timestamp
+from sqlalchemy import DateTime, Integer, Text, Float, Date
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -19,7 +19,7 @@ class ApiSubmission(Base):
 
     http_status: Mapped[int | None] = mapped_column(Integer)
     response_body: Mapped[str | None] = mapped_column(Text)
-    submitted_at: Mapped[datetime | None] = mapped_column(Timestamp)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime)
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     idempotency_key: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
     status: Mapped[str] = mapped_column(Text, default="processing", nullable=False)

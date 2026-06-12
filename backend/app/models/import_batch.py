@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Integer, Text, Timestamp, func
+from sqlalchemy import DateTime, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -11,7 +11,7 @@ class ImportBatch(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     imported_at: Mapped[datetime] = mapped_column(
-        Timestamp, server_default=func.now(), nullable=False
+        DateTime, server_default=func.now(), nullable=False
     )
     total_rows: Mapped[int | None] = mapped_column(Integer)
     accepted_rows: Mapped[int | None] = mapped_column(Integer)

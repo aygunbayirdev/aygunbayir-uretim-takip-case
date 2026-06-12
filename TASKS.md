@@ -28,10 +28,10 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 3. CSV Parser
 
-- [ ] `services/csv_parser.py` — chardet ile encoding auto-detect (Latin-1 / CP1254)
-- [ ] `pandas.read_csv(..., chunksize=5000)` ile chunk'lı okuma (100K+ satır desteği)
-- [ ] Sütun adı mapping (CSV başlıkları → ORM field'ları)
-- [ ] Ham parse sonucu `dict` listesi olarak dön, validasyona hazırla
+- [x] `services/csv_parser.py` — chardet ile encoding auto-detect (Latin-1 / CP1254)
+- [x] `pandas.read_csv(..., chunksize=5000)` ile chunk'lı okuma (100K+ satır desteği)
+- [x] Sütun adı mapping — kullanıcı onaylı UI mapping + otomatik tespit (18/18 sütun)
+- [x] Ham parse sonucu `dict` listesi olarak dön, validasyona hazırla
 
 ---
 

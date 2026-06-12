@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Integer, Text, Timestamp, ForeignKey
+from sqlalchemy import DateTime, Integer, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -18,6 +18,6 @@ class ValidationIssue(Base):
     suggested_action: Mapped[str | None] = mapped_column(Text)
 
     resolved: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    resolved_at: Mapped[datetime | None] = mapped_column(Timestamp)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime)
     resolved_by: Mapped[str | None] = mapped_column(Text)
     correction_note: Mapped[str | None] = mapped_column(Text)

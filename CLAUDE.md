@@ -778,3 +778,48 @@ Case study teslim gereksinimi — README şu başlıkları içermeli:
 ```
 
 > Not: README'deki kütüphane gerekçeleri değerlendirme kriterleri arasında — her bağımlılık için kısa "neden bunu seçtim" açıklaması ekle.
+
+---
+
+## 14. CSV Parser Implementasyon Detayları
+
+### Kullanılan Kütüphaneler
+
+| Kütüphane | Amaç | Gerekçe |
+|-----------|------|---------|
+| `chardet` | Encoding auto-detect | CSV Latin-1/CP1254 encode — UTF-8 varsayımı Türkçe karakterleri bozar |
+| `pandas` | CSV okuma | `chunksize=5000` ile 100K+ satırı RAM taşması olmadan işler |
+| `hashlib` (stdlib) | SHA-256 hash | `import_batches.file_hash` ile duplicate import koruması |
+
+### Çalışma Akışı
+
+```
+1. Dosya byte'larını oku → chardet ile encoding tespit et
+2. SHA-256 hash hesapla → duplicate kontrolü için döndür
+3. pandas read_csv(chunksize=5000) ile chunk'lı okuma
+4. Sütun adlarını ORM field'larına map'le
+5. Her satırı dict olarak döndür, validator'a hazır hale getir
+```
+
+### Sütun Mapping
+
+CSV başlıkları → ORM field adları dönüşümü `csv_parser.py` içinde sabit bir dict olarak tutulur.
+Bilinmeyen sütun gelirse `ValueError` fırlatılır.
+
+### Dönen Değer
+
+```python
+@dataclass
+class ParseResult:
+    file_hash: str    # SHA-256, duplicate kontrolü için
+    total_rows: int
+    rows: list[dict]  # validator'a gidecek ham satırlar
+    encoding: str     # tespit edilen encoding (log için)
+```
+
+### Kritik Notlar
+
+- `chardet.detect()` güven skoru (`confidence`) 0.7'nin altındaysa Latin-1 fallback kullanılır.
+- `chunksize` 5000 olarak sabitlendi; büyük dosyalarda bellek kullanımı bu değerle sınırlandırılır.
+- `csv_row_number` her satır için `chunk_offset + satır_index + 2` olarak hesaplanır
+  (1 = header, bu yüzden +2).

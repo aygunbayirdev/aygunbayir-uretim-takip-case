@@ -1,3 +1,59 @@
+export type TargetField =
+  | 'record_id' | 'tarih' | 'is_emri_no' | 'is_merkezi_no' | 'ismerkezi_adi'
+  | 'is_istasyon_adi' | 'stok_adi' | 'vardiya' | 'availability' | 'performance'
+  | 'quality' | 'oee' | 'calisma_suresi' | 'durus_suresi' | 'planli_durus'
+  | 'plansiz_durus' | 'uretilen_miktar' | 'hatali_miktar' | 'ignore'
+
+export const FIELD_LABELS: Record<TargetField, string> = {
+  record_id: 'Kayıt ID',
+  tarih: 'Tarih',
+  is_emri_no: 'İş Emri No',
+  is_merkezi_no: 'İş Merkezi No',
+  ismerkezi_adi: 'İşmerkezi Adı',
+  is_istasyon_adi: 'İş İstasyon Adı',
+  stok_adi: 'Stok Adı',
+  vardiya: 'Vardiya',
+  availability: 'Kullanılırlık (A%)',
+  performance: 'Performans (P%)',
+  quality: 'Kalite (Q%)',
+  oee: 'OEE',
+  calisma_suresi: 'Çalışma Süresi',
+  durus_suresi: 'Duruş Süresi',
+  planli_durus: 'Planlı Duruş',
+  plansiz_durus: 'Plansız Duruş',
+  uretilen_miktar: 'Üretilen Miktar',
+  hatali_miktar: 'Hatalı Miktar',
+  ignore: 'Yoksay',
+}
+
+export interface ColumnInfo {
+  csv_name: string
+  suggested_field: TargetField | null
+  sample_values: string[]
+}
+
+export interface PreviewResult {
+  token: string
+  encoding: string
+  file_hash: string
+  columns: ColumnInfo[]
+  duplicate_batch_id: number | null
+}
+
+export interface ColumnMappingItem {
+  csv_column: string
+  target_field: TargetField
+}
+
+export interface ImportSummary {
+  batch_id: number
+  filename: string
+  total_rows: number
+  accepted_rows: number
+  rejected_rows: number
+  status: string
+}
+
 export type ValidationStatus = 'pending' | 'clean' | 'warning' | 'rejected'
 export type ValidationSeverity = 'error' | 'warning'
 export type ValidationAction = 'reject' | 'warn' | 'autocorrect'

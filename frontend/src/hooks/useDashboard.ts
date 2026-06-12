@@ -8,10 +8,10 @@ export function useKpi() {
   })
 }
 
-export function useOeeTrend(dateFrom?: string, dateTo?: string) {
+export function useOeeTrend(dateFrom?: string, dateTo?: string, granularity = 'daily') {
   return useQuery({
-    queryKey: ['dashboard', 'oee-trend', dateFrom, dateTo],
-    queryFn: () => dashboardApi.getOeeTrend(dateFrom, dateTo),
+    queryKey: ['dashboard', 'oee-trend', dateFrom, dateTo, granularity],
+    queryFn: () => dashboardApi.getOeeTrend(dateFrom, dateTo, granularity),
   })
 }
 

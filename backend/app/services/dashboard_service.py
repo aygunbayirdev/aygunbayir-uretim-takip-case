@@ -68,9 +68,18 @@ def get_oee_trend(
     db: Session,
     date_from: date | None = None,
     date_to: date | None = None,
+    granularity: str = "daily",
 ) -> list[OeeTrendItem]:
+    _FORMATS = {
+        "daily":   "%Y-%m-%d",
+        "weekly":  "%Y-W%W",
+        "monthly": "%Y-%m",
+    }
+    fmt = _FORMATS.get(granularity, "%Y-%m-%d")
+    period_expr = func.strftime(fmt, ProductionRecord.tarih).label("period")
+
     query = db.query(
-        ProductionRecord.tarih,
+        period_expr,
         func.avg(ProductionRecord.oee).label("avg_oee"),
         func.avg(ProductionRecord.availability).label("avg_availability"),
         func.avg(ProductionRecord.performance).label("avg_performance"),
@@ -83,11 +92,11 @@ def get_oee_trend(
     if date_to:
         query = query.filter(ProductionRecord.tarih <= date_to)
 
-    rows = query.group_by(ProductionRecord.tarih).order_by(ProductionRecord.tarih.asc()).all()
+    rows = query.group_by(period_expr).order_by(period_expr.asc()).all()
 
     return [
         OeeTrendItem(
-            date=r.tarih,
+            date=r.period,
             avg_oee=_round2(r.avg_oee),
             avg_availability=_round2(r.avg_availability),
             avg_performance=_round2(r.avg_performance),

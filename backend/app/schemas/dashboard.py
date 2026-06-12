@@ -20,7 +20,7 @@ class KpiResponse(BaseModel):
 
 
 class OeeTrendItem(BaseModel):
-    date: date
+    date: str           # daily: "YYYY-MM-DD" | weekly: "YYYY-WNN" | monthly: "YYYY-MM"
     avg_oee: float | None
     avg_availability: float | None
     avg_performance: float | None

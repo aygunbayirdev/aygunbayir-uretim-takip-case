@@ -138,9 +138,9 @@ export const dashboardApi = {
     return data
   },
 
-  getOeeTrend: async (dateFrom?: string, dateTo?: string): Promise<OeeTrendItem[]> => {
+  getOeeTrend: async (dateFrom?: string, dateTo?: string, granularity = 'daily'): Promise<OeeTrendItem[]> => {
     const { data } = await api.get<OeeTrendItem[]>('/dashboard/oee-trend', {
-      params: { date_from: dateFrom, date_to: dateTo },
+      params: { date_from: dateFrom, date_to: dateTo, granularity },
     })
     return data
   },

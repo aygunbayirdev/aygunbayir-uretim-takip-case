@@ -31,9 +31,10 @@ def kpi(db: Session = Depends(get_db)) -> KpiResponse:
 def oee_trend(
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
+    granularity: str = Query("daily", pattern="^(daily|weekly|monthly)$"),
     db: Session = Depends(get_db),
 ) -> list[OeeTrendItem]:
-    return get_oee_trend(db, date_from=date_from, date_to=date_to)
+    return get_oee_trend(db, date_from=date_from, date_to=date_to, granularity=granularity)
 
 
 @router.get("/by-shift", response_model=list[ShiftStatItem])

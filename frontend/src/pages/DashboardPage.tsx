@@ -1,4 +1,4 @@
-import { useKpi, useOeeTrend, useByShift, useByStation, useQualityDist } from '../hooks/useDashboard'
+import { useKpi, useByShift, useByStation, useQualityDist } from '../hooks/useDashboard'
 import KpiCards from '../components/dashboard/KpiCards'
 import OeeTrendChart from '../components/dashboard/OeeTrendChart'
 import ShiftComparisonChart from '../components/dashboard/ShiftComparisonChart'
@@ -10,14 +10,13 @@ function Skeleton({ className = '' }: { className?: string }) {
 }
 
 export default function DashboardPage() {
-  const kpi        = useKpi()
-  const trend      = useOeeTrend()
-  const byShift    = useByShift()
-  const byStation  = useByStation()
+  const kpi         = useKpi()
+  const byShift     = useByShift()
+  const byStation   = useByStation()
   const qualityDist = useQualityDist()
 
-  const loading = kpi.isLoading || trend.isLoading || byShift.isLoading || byStation.isLoading || qualityDist.isLoading
-  const error   = kpi.error || trend.error || byShift.error || byStation.error || qualityDist.error
+  const loading = kpi.isLoading || byShift.isLoading || byStation.isLoading || qualityDist.isLoading
+  const error   = kpi.error || byShift.error || byStation.error || qualityDist.error
 
   if (loading) {
     return (
@@ -66,7 +65,7 @@ export default function DashboardPage() {
       <KpiCards data={kpi.data} />
 
       {/* OEE Trend */}
-      <OeeTrendChart data={trend.data ?? []} />
+      <OeeTrendChart />
 
       {/* Vardiya + İstasyon */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -108,7 +108,6 @@ async def send_with_retry(payload: dict, idempotency_key: str) -> dict:
                 continue
 
             if resp.status_code == 413:
-                _circuit_failure()
                 raise ValueError("Payload 10 KB sınırını aştı — batch boyutunu küçült.")
 
             if resp.status_code in (401, 422):
@@ -188,11 +187,20 @@ async def send_all_clean(submission_id: int, db: Session) -> None:
         mark_records_sent(db, sent_ids)
 
     # Ana submission kaydını güncelle
-    final_status = "failed" if last_error and not sent_ids else "success"
+    if last_error and not sent_ids:
+        final_status = "failed"
+        final_body = last_error
+    elif last_error:
+        final_status = "success"
+        final_body = f"{len(sent_ids)} grup gönderildi. Hata: {last_error}"
+    else:
+        final_status = "success"
+        final_body = f"{len(sent_ids)} grup gönderildi."
+
     _finalize(
         db, submission_id,
         http_status=200 if final_status == "success" else 0,
-        response_body=last_error or f"{len(sent_ids)} kayıt gönderildi.",
+        response_body=final_body,
         status=final_status,
         records_count=len(sent_ids),
     )

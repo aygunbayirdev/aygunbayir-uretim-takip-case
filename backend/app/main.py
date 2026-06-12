@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import create_tables
+import app.models.import_batch  # noqa: F401
+import app.models.production_record  # noqa: F401
+import app.models.validation_issue  # noqa: F401
+import app.models.api_submission  # noqa: F401
 
 app = FastAPI(
     title="Üretim Performans Takip API",

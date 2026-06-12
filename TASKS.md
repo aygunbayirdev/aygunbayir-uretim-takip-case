@@ -18,10 +18,10 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 ## 2. Veritabanı Şeması ve Modeller
 
 - [x] `database.py` — SQLAlchemy engine, SessionLocal, Base
-- [ ] `models/import_batch.py` — `import_batches` tablosu (file_hash UNIQUE)
-- [ ] `models/production_record.py` — `production_records` tablosu (csv_row_number dahil)
-- [ ] `models/validation_issue.py` — `validation_issues` tablosu
-- [ ] `models/api_submission.py` — `api_submissions` tablosu (idempotency_key UNIQUE)
+- [x] `models/import_batch.py` — `import_batches` tablosu (file_hash UNIQUE)
+- [x] `models/production_record.py` — `production_records` tablosu (csv_row_number dahil)
+- [x] `models/validation_issue.py` — `validation_issues` tablosu
+- [x] `models/api_submission.py` — `api_submissions` tablosu (idempotency_key UNIQUE)
 - [x] `config.py` — pydantic-settings, `.env` okuma
 
 ---

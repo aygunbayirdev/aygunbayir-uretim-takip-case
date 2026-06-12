@@ -88,11 +88,11 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 7. Validation Router
 
-- [x] `repositories/validation_repo.py` — CRUD + summary (GROUP BY rule)
+- [x] `repositories/validation_repo.py` — CRUD + summary (GROUP BY rule) + `_sync_record_status` (issue resolve → validation_status otomatik güncelleme)
 - [x] `routers/validation_router.py`
   - [x] `GET /api/validation/issues` — filtreli issue listesi
   - [x] `GET /api/validation/issues/{id}` — tek issue detayı
-  - [x] `PATCH /api/validation/issues/{id}` — resolve / correct (audit trail)
+  - [x] `PATCH /api/validation/issues/{id}` — resolve / correct (audit trail); ProductionRecord.validation_status otomatik güncellenir
   - [x] `GET /api/validation/summary` — hata tipi dağılımı
   - [x] `GET /api/validation/export` — Excel validation raporu (openpyxl)
 

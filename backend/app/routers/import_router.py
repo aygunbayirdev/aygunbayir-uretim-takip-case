@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.import_batch import ImportBatch
 from app.schemas.production import (
-    ImportConfirmRequest,
-    ImportSummaryResponse,
-    PreviewResponse,
     ColumnInfoSchema,
+    ImportBatchResponse,
+    ImportConfirmRequest,
+    PreviewResponse,
 )
 from app.services.csv_parser import parse_preview
 from app.services.import_service import import_csv
@@ -45,11 +45,11 @@ async def preview_import(
     )
 
 
-@router.post("/confirm", response_model=ImportSummaryResponse)
+@router.post("/confirm", response_model=ImportBatchResponse)
 def confirm_import(
     request: ImportConfirmRequest,
     db: Session = Depends(get_db),
-) -> ImportSummaryResponse:
+) -> ImportBatchResponse:
     mapping = {item.csv_column: item.target_field for item in request.mapping}
 
     try:
@@ -57,11 +57,4 @@ def confirm_import(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    return ImportSummaryResponse(
-        batch_id=batch.id,
-        filename=batch.filename,
-        total_rows=batch.total_rows or 0,
-        accepted_rows=batch.accepted_rows or 0,
-        rejected_rows=batch.rejected_rows or 0,
-        status=batch.status,
-    )
+    return ImportBatchResponse.model_validate(batch)

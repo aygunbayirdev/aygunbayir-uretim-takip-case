@@ -6,10 +6,8 @@ services:
     volumes:
       - ./backend:/app
       - sqlite_data:/app/data
-    environment:
-      DATABASE_URL: sqlite:///./data/production.db
-      API_ENDPOINT: http://89.252.189.91:8983/api/v1/submit
-      API_KEY: ""
+    env_file:
+      - ./backend/.env
     restart: unless-stopped
 
   frontend:

@@ -127,20 +127,20 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 11. API Client ve Submission
 
-- [ ] `services/api_client.py`
-  - [ ] `build_submission_payload()` — gün+vardiya bazında aggregate
-  - [ ] `send_with_retry()` — 3 deneme, exponential backoff (1/5/30 sn)
-  - [ ] 429 (rate limit) → 60 sn bekle
-  - [ ] 413 (payload too large) → retry yok, hata fırlat
-  - [ ] 401/422 → non-retryable, hata fırlat
-  - [ ] Idempotency key: `"{production_date}_{shift}"`
-  - [ ] Circuit breaker: 5 ardışık hata → OPEN, 60 sn sonra HALF-OPEN
+- [x] `services/api_client.py`
+  - [x] `build_submission_payload()` — gün+vardiya bazında aggregate
+  - [x] `send_with_retry()` — 3 deneme, exponential backoff (1/5/30 sn)
+  - [x] 429 (rate limit) → 60 sn bekle
+  - [x] 413 (payload too large) → retry yok, hata fırlat
+  - [x] 401/422 → non-retryable, hata fırlat
+  - [x] Idempotency key: `"{production_date}_{shift}"`
+  - [x] Circuit breaker: 5 ardışık hata → OPEN, 60 sn sonra HALF-OPEN
 - [x] `repositories/submission_repo.py` — create_pending, update_result, increment_retry
-- [ ] `routers/submission_router.py`
-  - [ ] `POST /api/submissions/send` — BackgroundTasks ile async gönderim
-  - [ ] `GET /api/submissions` — gönderim geçmişi
-  - [ ] `GET /api/submissions/{id}` — tek gönderim detayı
-  - [ ] `POST /api/submissions/{id}/retry` — başarısız gönderimi tekrar dene
+- [x] `routers/submission_router.py`
+  - [x] `POST /api/submissions/send` — BackgroundTasks ile async gönderim
+  - [x] `GET /api/submissions` — gönderim geçmişi
+  - [x] `GET /api/submissions/{id}` — tek gönderim detayı
+  - [x] `POST /api/submissions/{id}/retry` — başarısız gönderimi tekrar dene
 
 ---
 

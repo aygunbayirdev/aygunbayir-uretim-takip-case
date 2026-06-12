@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.models.production_record import ProductionRecord
 from app.models.validation_issue import ValidationIssue
 
 
@@ -45,9 +46,34 @@ def resolve_issue(
     issue.resolved_at = datetime.utcnow() if resolved else None
     issue.resolved_by = resolved_by
     issue.correction_note = correction_note
+    db.flush()
+
+    _sync_record_status(db, issue.record_id)
+
     db.commit()
     db.refresh(issue)
     return issue
+
+
+def _sync_record_status(db: Session, record_id: int) -> None:
+    """Update ProductionRecord.validation_status based on remaining open issues."""
+    open_issues = (
+        db.query(ValidationIssue.severity)
+        .filter(ValidationIssue.record_id == record_id, ValidationIssue.resolved == 0)
+        .all()
+    )
+    severities = {row.severity for row in open_issues}
+
+    if "error" in severities:
+        new_status = "rejected"
+    elif "warning" in severities:
+        new_status = "warning"
+    else:
+        new_status = "clean"
+
+    db.query(ProductionRecord).filter(ProductionRecord.id == record_id).update(
+        {"validation_status": new_status}
+    )
 
 
 def get_summary(db: Session) -> dict:

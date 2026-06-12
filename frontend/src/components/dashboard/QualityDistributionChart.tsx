@@ -29,7 +29,9 @@ export default function QualityDistributionChart({ data }: Props) {
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 10, angle: -35, textAnchor: 'end' }}
+            tick={{ fontSize: 10 }}
+            angle={-35}
+            textAnchor="end"
             interval={0}
           />
           <YAxis tick={{ fontSize: 11 }} unit="%" />

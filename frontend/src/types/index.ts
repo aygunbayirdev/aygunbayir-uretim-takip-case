@@ -41,6 +41,7 @@ export interface PreviewResult {
   encoding: string
   file_hash: string
   columns: ColumnInfo[]
+  sample_rows: Record<string, string>[]
   duplicate_batch_id: number | null
 }
 
@@ -239,7 +240,7 @@ export interface QualityDistItem {
 // Submissions
 // ---------------------------------------------------------------------------
 
-export type SubmissionStatus = 'processing' | 'success' | 'failed'
+export type SubmissionStatus = 'pending' | 'processing' | 'success' | 'failed'
 
 export interface ApiSubmission {
   id: number
@@ -250,6 +251,7 @@ export interface ApiSubmission {
   machine_count: number | null
   total_units: number | null
   http_status: number | null
+  response_body: string | null
   submitted_at: string | null
   retry_count: number
   idempotency_key: string

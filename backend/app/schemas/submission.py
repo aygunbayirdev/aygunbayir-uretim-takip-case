@@ -14,6 +14,7 @@ class SubmissionResponse(BaseModel):
     machine_count: int | None
     total_units: int | None
     http_status: int | None
+    response_body: str | None
     submitted_at: datetime | None
     retry_count: int
     idempotency_key: str

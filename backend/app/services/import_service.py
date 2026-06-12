@@ -4,6 +4,7 @@ from app.models.import_batch import ImportBatch
 from app.models.production_record import ProductionRecord
 from app.models.validation_issue import ValidationIssue
 from app.services.csv_parser import parse_csv, get_temp_file, remove_temp_file
+from app.services.validator import validate_record, determine_status, worst_status
 from app.utils.date_utils import parse_date
 
 BUSINESS_KEY_FIELDS = ("tarih", "is_emri_no", "vardiya", "is_istasyon_adi")
@@ -160,24 +161,18 @@ def import_csv(token: str, mapping: dict[str, str], db: Session) -> ImportBatch:
         total_rows=parse_result.total_rows,
         accepted_rows=0,
         rejected_rows=0,
-        status="completed",
+        status="processing",  # validation bitmeden processing
         file_hash=parse_result.file_hash,
     )
     db.add(batch)
     db.flush()
 
-    accepted = 0
-    rejected = 0
     saved_records: list[tuple[ProductionRecord, dict]] = []
 
     for idx, row in enumerate(parse_result.rows):
-        is_infile_dup = idx in duplicate_indices
         record = _row_to_record(row, batch.id)
-        if is_infile_dup:
+        if idx in duplicate_indices:
             record.validation_status = "rejected"
-            rejected += 1
-        else:
-            accepted += 1
         db.add(record)
         saved_records.append((record, row))
 
@@ -202,8 +197,30 @@ def import_csv(token: str, mapping: dict[str, str], db: Session) -> ImportBatch:
     # VD-05: Çapraz-batch duplicate kontrolü
     _check_cross_batch_duplicates(saved_records, batch.id, db)
 
-    batch.accepted_rows = accepted
-    batch.rejected_rows = rejected
+    # VG-01 → VL-03: VD-04 tarafından reddedilmemiş tüm kayıtları validate et
+    for record, _ in saved_records:
+        if record.validation_status == "rejected":
+            continue  # VD-04 reddi — tekrar işleme gerek yok
+
+        issues = validate_record(record)
+        validator_status = determine_status(issues)
+        # VD-05 uyarısı varsa worst_status ile koru
+        record.validation_status = worst_status(record.validation_status, validator_status)
+
+        for issue in issues:
+            db.add(ValidationIssue(
+                record_id=record.id,
+                rule_code=issue.rule_code,
+                severity=issue.severity,
+                field_name=issue.field_name,
+                message=issue.message,
+                suggested_action=issue.suggested_action,
+            ))
+
+    # Validation tamamlandıktan sonra batch count'larını güncelle
+    batch.accepted_rows = sum(1 for r, _ in saved_records if r.validation_status != "rejected")
+    batch.rejected_rows = sum(1 for r, _ in saved_records if r.validation_status == "rejected")
+    batch.status = "completed"
 
     db.commit()
     db.refresh(batch)

@@ -11,14 +11,17 @@ Her özellik için şu döngü izlenir — istisnasız:
 ```
 1. PLANLA        → Neyi, nasıl yapacağını açıkla. Kullanıcı onayını bekle.
 2. UYGULA        → Onay geldikten sonra implement et.
-3. REVIEW        → Commit mesajını göster, kullanıcı onayını bekle.
-4. COMMIT        → Onay geldikten sonra commit et.
-5. TASKS.md GÜN. → Tamamlanan maddeleri [x] ile işaretle, yeni maddeler eklendiyse ekle.
+3. TEST GÜN.     → İlgili unit testleri yaz veya güncelle; tüm testleri çalıştır.
+4. REVIEW        → Testler geçtikten sonra commit mesajını göster, kullanıcı onayını bekle.
+5. COMMIT        → Onay geldikten sonra commit et.
+6. TASKS.md GÜN. → Tamamlanan maddeleri [x] ile işaretle, yeni maddeler eklendiyse ekle.
 ```
 
 **Kurallar:**
 - Planlama yapılmadan hiçbir implementasyona başlanmaz.
 - Commit mesajı kullanıcı onaylamadan commit atılmaz.
+- Commit öncesi `python -m pytest tests/ -v` çalıştırılır; tüm testler geçmeden commit atılmaz.
+- Yeni feature → ilgili unit testleri eklenir. Mevcut kodu değiştirme → etkilenen testler güncellenir.
 - Her commit sonrası TASKS.md güncellenir — sonraya bırakılmaz.
 - Kullanıcı her aşamada karar verir; Claude öneri sunar, dayatmaz.
 

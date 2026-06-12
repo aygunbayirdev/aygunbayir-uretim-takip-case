@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ColumnInfo, ColumnMappingItem, TargetField } from '../../types'
 import { FIELD_LABELS } from '../../types'
+import PreviewTable from './PreviewTable'
 
 const ALL_TARGET_FIELDS: TargetField[] = [
   'record_id', 'tarih', 'is_emri_no', 'is_merkezi_no', 'ismerkezi_adi',
@@ -11,13 +12,14 @@ const ALL_TARGET_FIELDS: TargetField[] = [
 
 interface Props {
   columns: ColumnInfo[]
+  sampleRows: Record<string, string>[]
   duplicateBatchId: number | null
   onConfirm: (mapping: ColumnMappingItem[]) => void
   onBack: () => void
   loading: boolean
 }
 
-export default function ColumnMappingStep({ columns, duplicateBatchId, onConfirm, onBack, loading }: Props) {
+export default function ColumnMappingStep({ columns, sampleRows, duplicateBatchId, onConfirm, onBack, loading }: Props) {
   const [mapping, setMapping] = useState<Record<string, TargetField>>(() =>
     Object.fromEntries(
       columns.map((col) => [col.csv_name, col.suggested_field ?? 'ignore'])
@@ -47,6 +49,8 @@ export default function ColumnMappingStep({ columns, duplicateBatchId, onConfirm
           CSV'deki her sütunu karşılık gelen alana eşleştirin. Otomatik tespit öneriler sunulmuştur.
         </p>
       </div>
+
+      {sampleRows.length > 0 && <PreviewTable rows={sampleRows} />}
 
       {duplicateBatchId !== null && (
         <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded text-sm">

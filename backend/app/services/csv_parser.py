@@ -11,7 +11,7 @@ CHUNK_SIZE = 5000
 ENCODING_CONFIDENCE_THRESHOLD = 0.7
 FALLBACK_ENCODING = "latin-1"
 IGNORE_FIELD = "ignore"
-SAMPLE_ROWS = 5
+SAMPLE_ROWS = 10
 TEMP_TTL_SECONDS = 600  # 10 dakika — confirm edilmeyen preview dosyaları temizlenir
 
 TARGET_FIELDS = [
@@ -60,6 +60,7 @@ class PreviewResult:
     encoding: str
     file_hash: str
     columns: list[ColumnInfo]
+    sample_rows: list[dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -121,7 +122,18 @@ def parse_preview(file_bytes: bytes, filename: str) -> PreviewResult:
             sample_values=[str(v) for v in df[col].tolist()],
         ))
 
-    return PreviewResult(token=token, encoding=encoding, file_hash=file_hash, columns=columns)
+    sample_rows = [
+        {col: str(row[col]) for col in df.columns}
+        for _, row in df.iterrows()
+    ]
+
+    return PreviewResult(
+        token=token,
+        encoding=encoding,
+        file_hash=file_hash,
+        columns=columns,
+        sample_rows=sample_rows,
+    )
 
 
 def get_temp_file(token: str) -> tuple[bytes, str, str] | None:

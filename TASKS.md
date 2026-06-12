@@ -160,12 +160,11 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 13. Frontend — Import Sayfası
 
-- [x] `pages/ImportPage.tsx` — çok adımlı: upload → mapping → summary
+- [x] `pages/ImportPage.tsx` — çok adımlı: upload → mapping → progress → summary
 - [x] `components/import/CsvDropzone.tsx` — react-dropzone
 - [x] `components/import/ColumnMappingStep.tsx` — kullanıcı onaylı sütun eşleştirme
-- [x] `hooks/useImport.ts`
-- [ ] `components/import/ImportProgress.tsx` — polling ile ilerleme çubuğu
-- [ ] `components/import/ImportSummary.tsx`
+- [x] `components/import/PreviewTable.tsx` — ilk 10 satır önizleme
+- [x] `hooks/useImport.ts` — multi-file FileEntry[], per-file hash dedup, polling, async confirm
 
 ---
 

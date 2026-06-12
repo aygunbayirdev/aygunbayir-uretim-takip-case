@@ -20,7 +20,9 @@ Her özellik için şu döngü izlenir — istisnasız:
 **Kurallar:**
 - Planlama yapılmadan hiçbir implementasyona başlanmaz.
 - Commit mesajı kullanıcı onaylamadan commit atılmaz.
-- Commit öncesi `python -m pytest tests/ -v` çalıştırılır; tüm testler geçmeden commit atılmaz.
+- Commit öncesi hem backend hem frontend testleri çalıştırılır; tümü geçmeden commit atılmaz:
+  - Backend: `cd backend && python -m pytest tests/ -v`
+  - Frontend: `cd frontend && npm test`
 - Yeni feature → ilgili unit testleri eklenir. Mevcut kodu değiştirme → etkilenen testler güncellenir.
 - Her commit sonrası TASKS.md güncellenir — sonraya bırakılmaz.
 - Kullanıcı her aşamada karar verir; Claude öneri sunar, dayatmaz.

@@ -205,7 +205,6 @@ Gönderim arka planda (`BackgroundTasks`) çalışır; UI bloklanmaz. Her gönde
 
 ## Yapamadığım / Vakit Yetmeyen Kısımlar
 
-- **Frontend testleri:** Backend unit testleri yazıldı (102 test); React component testleri (Vitest + Testing Library) zamanın yetmemesi nedeniyle eklenmedi.
 - **Docker production build:** Frontend `Dockerfile` dev server (`npm run dev`) çalıştırıyor; production için `nginx` + `npm run build` konfigürasyonu yapılmadı.
 
 ---

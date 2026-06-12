@@ -182,11 +182,10 @@ Tüm geliştirme görevleri ve case study gereksinimleri. Tamamlananlar `[x]` il
 
 ## 15. Frontend — Records Sayfası
 
-- [ ] `pages/RecordsPage.tsx`
-- [ ] Filtreli tablo: `date_from`, `date_to`, `shift`, `station`, `oee_min/max`, `issues_only`
-- [ ] 300ms debounce ile filtre inputları
-- [ ] CSV export butonu
-- [ ] `hooks/useRecords.ts`
+- [x] `pages/RecordsPage.tsx` — filtreli tablo, CSV export, düzeltme modalı (audit trail)
+- [x] `components/shared/FilterBar.tsx` — 300ms debounce, tarih/vardiya/durum/istasyon/issues_only
+- [x] `components/shared/DataTable.tsx` — genel amaçlı, sayfalama dahil
+- [x] `hooks/useRecords.ts` — useRecords (React Query), usePatchRecord (mutation)
 
 ---
 

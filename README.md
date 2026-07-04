@@ -1,6 +1,6 @@
 # aygunbayir-uretim-takip-case
 
-Magna Automotive injection molding hattı için OEE (Overall Equipment Effectiveness) takip uygulaması.  
+ACME Automotive injection molding hattı için OEE (Overall Equipment Effectiveness) takip uygulaması.  
 MES sisteminden gelen CSV verisi import edilir, 19 farklı kural (17 iş/içerik kuralı, 2 duplicate/import kuralı) ile validate edilir, dashboard'da görselleştirilir ve REST API'ye gönderilir.
 
 ---

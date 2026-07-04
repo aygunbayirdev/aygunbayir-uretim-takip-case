@@ -26,7 +26,7 @@ export default function Sidebar() {
         </div>
         <div className="leading-tight">
           <p className="text-sm font-semibold text-white">OEE Takip</p>
-          <p className="text-xs text-slate-400">Magna Otomotiv</p>
+          <p className="text-xs text-slate-400">ACME Automotive</p>
         </div>
       </div>
 

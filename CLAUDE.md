@@ -31,7 +31,7 @@ Her özellik için şu döngü izlenir — istisnasız:
 
 ## 1. Proje Özeti
 
-Magna otomotiv yan sanayi için injection molding hattı OEE takip uygulaması.
+ACME Automotive yan sanayi için injection molding hattı OEE takip uygulaması.
 MES sisteminden gelen CSV verisi import edilir, validate edilir, dashboard'da görselleştirilir,
 temiz kayıtlar REST API ile hedef sisteme gönderilir.
 

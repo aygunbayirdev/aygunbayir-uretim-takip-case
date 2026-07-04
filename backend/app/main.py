@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Üretim Performans Takip API",
-    description="Magna otomotiv injection molding hattı OEE takip uygulaması.",
+    description="ACME Automotive injection molding hattı OEE takip uygulaması.",
     version="1.0.0",
     lifespan=lifespan,
 )
